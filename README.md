@@ -19,7 +19,7 @@ BucketLoot comes with a guest mode by default, which means a user doesn't needs 
 <h2> Features </h2>
 
 <h4> Secret Scanning </h4>
-Scans for over 30+ unique RegEx signatures that can help in uncovering secret exposures from the misconfigured storage bucket. Users have the ability to modify or add their own signatures in the <a href="./credentials.json">credentials.json</a> file. If you believe you have any cool signatures which might be helpful for others too and could be flagged at scale, go ahead and make a PR!
+Scans for over 30+ unique RegEx signatures that can help in uncovering secret exposures from the misconfigured storage bucket. Users have the ability to modify or add their own signatures in the <a href="./regexes.json">regexes.json</a> file. If you believe you have any cool signatures which might be helpful for others too and could be flagged at scale, go ahead and make a PR!
 
 <h4> Asset Extraction </h4>
 Interested in stepping up your asset discovery game? BucketLoot extracts all the URLs/Subdomains and Domains that could be present in an exposed storage bucket, enabling you to have a chance of discovering hidden endpoints, thus giving you an edge over the other traditional recon tools.
