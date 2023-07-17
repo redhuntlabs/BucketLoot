@@ -1,3 +1,4 @@
+<h1>Documentation</h1>
 <hr style="height: 1px;">
 <div id="setup">
 <h2> Setup </h2>

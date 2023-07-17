@@ -1,5 +1,7 @@
 <h1 align="center">BucketLoot</h1>
 <p align="center"><b>An Automated S3 Bucket Inspector</b></p>
+<p align="center">
+<a href="#description">Description</a> • <a href="#features">Features</a> • <a href="docs/documentation.md">Documentation</a> • <a href="#acknowledgements">Acknowledgements</a></p>
 <hr>
 <img src="./toolscreenshot.png">
 <hr style="width:300px; height: 1px; margin: auto; margin-top: 20px;" />
