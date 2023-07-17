@@ -18,7 +18,7 @@ go build
 ```
 
 <h3>2. Credentials Setup (Optional) </h3>
-In order to setup the tool for the full scan mode (optional), you need to modify the <a href="./credentials.json">credentials.json</a> file and add the credentials for the target platforms for whom you would like to run a full scan against. At the moment, BucketLoot only supports AWS for running full mode scans, and we expect the release of another one or two modules for other platforms very soon.
+In order to setup the tool for the full scan mode (optional), you need to modify the <a href="../credentials.json">credentials.json</a> file and add the credentials for the target platforms for whom you would like to run a full scan against. At the moment, BucketLoot only supports AWS for running full mode scans, and we expect the release of another one or two modules for other platforms very soon.
 <h4><u>AWS</u></h4>
 
 In order to run the AWS module for the full scan mode, you need to generate the Access Key and Secret Key from the <a href="https://console.aws.amazon.com/iamv2/">IAM Dashboard</a> by heading to the <b>users</b> section, clicking on any user you would like to use for the tool, going to the <b>Security Credentials</b> tab, clicking on the <b>create access key</b> button, choosing "Third-party service" and finally creating the accees key.
