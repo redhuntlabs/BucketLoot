@@ -1,5 +1,5 @@
 <h1 align="center">BucketLoot</h1>
-<p align="center"><b>An Automated S3 Bucket Inspector</b></p>
+<p align="center"><b>An Automated S3-compatible Cloud Object Storage Bucket Inspector</b></p>
 <p align="center">
 <a href="#description">Description</a> • <a href="#features">Features</a> • <a href="docs/documentation.md">Documentation</a> • <a href="#acknowledgements">Acknowledgements</a></p>
 <hr>
@@ -8,7 +8,7 @@
 <br>
 <div id="description">
 <h2> Description </h2>
-BucketLoot is an automated S3 bucket inspector that can help users extract assets, flag secret exposures and even search for custom keywords as well as Regular Expressions from publicly-exposed storage buckets by scanning files that store data in plain-text.
+BucketLoot is an automated S3-compatible Cloud Object Storage Bucket inspector that can help users extract assets, flag secret exposures and even search for custom keywords as well as Regular Expressions from publicly-exposed storage buckets by scanning files that store data in plain-text.
 <br><br>
 The tool can scan for buckets deployed on Amazon Web Services (AWS), Google Cloud Storage (GCS), DigitalOcean Spaces and even custom domains/URLs which could be connected to these platforms. It returns the output in a JSON format, thus enabling users to parse it according to their liking or forward it to any other tool for further processing.
 <br><br>
