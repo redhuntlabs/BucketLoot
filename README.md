@@ -1,5 +1,5 @@
 <h1 align="center">BucketLoot</h1>
-<p align="center"><b>An Automated S3-compatible Cloud Object Storage Bucket Inspector</b></p>
+<p align="center"><b>An Automated S3-compatible Bucket Inspector</b></p>
 <p align="center">
 <a href="#description">Description</a> • <a href="#features">Features</a> • <a href="docs/documentation.md">Documentation</a> • <a href="#acknowledgements">Acknowledgements</a></p>
 <hr>
