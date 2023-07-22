@@ -1,7 +1,12 @@
 <h1 align="center">BucketLoot</h1>
 <p align="center"><b>An Automated S3-compatible Bucket Inspector</b></p>
 <p align="center">
-<a href="#description">Description</a> • <a href="#features">Features</a> • <a href="docs/documentation.md">Documentation</a> • <a href="#acknowledgements">Acknowledgements</a></p>
+<a href="#description">Description</a> • <a href="#features">Features</a> • <a href="docs/documentation.md">Documentation</a> • <a href="#acknowledgements">Acknowledgements</a><br><br>
+<img alt="Static Badge" src="https://img.shields.io/badge/Supports-AWS-yellow?logo=amazon">
+<img alt="Static Badge" src="https://img.shields.io/badge/Supports-GCP-red?logo=googlecloud">
+<img alt="Static Badge" src="https://img.shields.io/badge/Supports-DigitalOcean-blue?logo=digitalocean">
+<img alt="Static Badge" src="https://img.shields.io/badge/Supports-Custom%20Domains-green?logo=gear">
+</p>
 <hr>
 <img src="./toolscreenshot.png">
 <hr style="width:300px; height: 1px; margin: auto; margin-top: 20px;" />
