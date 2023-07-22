@@ -17,7 +17,7 @@ BucketLoot is an automated S3-compatible Bucket inspector that can help users ex
 <br><br>
 The tool can scan for buckets deployed on Amazon Web Services (AWS), Google Cloud Storage (GCS), DigitalOcean Spaces and even custom domains/URLs which could be connected to these platforms. It returns the output in a JSON format, thus enabling users to parse it according to their liking or forward it to any other tool for further processing.
 <br><br>
-BucketLoot comes with a guest mode by default, which means a user doesn't needs to specify any API tokens / Access Keys initially in order to run the scan. The tool will scrape a maximum of 1000 files that are returned in the XML response and if the storage bucket contains more than 1000 entries which the user would like to run the scanner on, they can provide platform credentials to run a complete scan.
+BucketLoot comes with a guest mode by default, which means a user doesn't needs to specify any API tokens / Access Keys initially in order to run the scan. The tool will scrape a maximum of 1000 files that are returned in the XML response and if the storage bucket contains more than 1000 entries which the user would like to run the scanner on, they can provide platform credentials to run a complete scan. If you'd like to know more about the tool, make sure to check out our <a href="https://redhuntlabs.com/blog/introducing-bucketloot-an-automated-cloud-bucket-inspector/">blog</a>.
 </div>
 <hr style="height: 1px;">
 <div id="features">
