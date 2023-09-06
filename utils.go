@@ -229,12 +229,19 @@ func toJSON() {
 	} else {
 		fmt.Println("\n" + string(jsonData))
 		if saveOutput != "" {
-			err := ioutil.WriteFile(saveOutput, jsonData, 0644)
+			file, err := os.Create(saveOutput)
 			if err != nil {
-				fmt.Println("error writing file:", err)
+				fmt.Println("Error creating file:", err)
 				return
 			}
+			defer file.Close() // Close the file when the function exits
 
+			_, err = file.Write(jsonData)
+			if err != nil {
+				fmt.Println("Error writing to file:", err)
+				return
+			}
+			fmt.Println("Data successfully saved to", saveOutput)
 			return
 		}
 	}
