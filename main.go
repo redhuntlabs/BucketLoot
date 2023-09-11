@@ -107,16 +107,19 @@ func main() {
 				fmt.Println("Discovered a total of " + strconv.Itoa(iniFileListData.TotalFiles) + " bucket files...")
 				fmt.Println("Total bucket files of interest: " + strconv.Itoa(iniFileListData.TotalIntFiles))
 				fmt.Println("\n ")
+				if *slowScan {
+					fmt.Println("Starting to scan the files... [SLOW]")
+				} else {
+					fmt.Println("Starting to scan the files... [FAST]")
+				}
 				for _, bucketEntry := range iniFileListData.ScanData {
 					if *slowScan {
-						fmt.Println("Starting to scan the files... [SLOW]")
 						scanS3FileSlow(bucketEntry.IntFiles, bucketEntry.URL)
 					} else {
-						fmt.Println("Starting to scan the files... [FAST]")
 						scanS3FilesFast(bucketEntry.IntFiles, bucketEntry.URL)
 					}
-					toJSON()
 				}
+				toJSON()
 			} else {
 				fmt.Println("Oops.. Looks like no interesting buckets were discovered! Aborting the scan...")
 				bucketlootOutput.Skipped = iniFileListData.NotScannable
