@@ -178,7 +178,7 @@ func listS3BucketFiles(bucketURLs []string) {
 				bucketFileSize := bucketSizes[i]
 				isBlacklisted = 0
 				for _, blacklistExtension := range blacklistExtensions {
-					if strings.Contains(bucketFile[1], blacklistExtension) {
+					if strings.Contains(strings.ToLower(bucketFile[1]), blacklistExtension) {
 						isBlacklisted = 1
 						break
 					}
