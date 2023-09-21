@@ -1,7 +1,8 @@
 {
     "Amazon MWS Auth Token": "amzn\\.mws\\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
     "Amazon SNS Topic Disclosure": "arn:aws:sns:[a-z0-9\\-]+:[0-9]+:[A-Za-z0-9\\-_]+",
-    "AWS Access Key ID Value": "(A3T[A-Z0-9]|AKIA|AGPA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}",
+    "AWS Access Key ID": "(A3T[A-Z0-9]|AKIA|AGPA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}",
+    "AWS Cognito Pool ID": ":[0-9A-Za-z]{8}-[0-9A-Za-z]{4}-[0-9A-Za-z]{4}-[0-9A-Za-z]{4}-[0-9A-Za-z]{12}",
     "Cloudinary Credentials Disclosure": "cloudinary://[0-9]{15}:[0-9A-Za-z\\-_]+@[0-9A-Za-z\\-_]+",
     "FCM Server Key": "AAAA[a-zA-Z0-9_-]{7}:[a-zA-Z0-9_-]{140}",
     "Mailchimp API": "[0-9a-f]{32}-us[0-9]{1,2}",
@@ -9,8 +10,6 @@
     "Slack User token disclosure": "xoxp-[0-9A-Za-z\\-]{72}",
     "Slack Webhook": "https://hooks.slack.com/services/T[0-9A-Za-z\\-_]{10}/B[0-9A-Za-z\\-_]{10}/[0-9A-Za-z\\-_]{23}",
     "SonarQube Token": "sonar.{0,50}(?:\\\"|'|`)?[0-9a-f]{40}(?:\\\"|'|`)?",
-    "AWS Access Key ID": "(A3T[A-Z0-9]|AKIA|AGPA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}",
-    "AWS Cognito Pool ID": ":[0-9A-Za-z]{8}-[0-9A-Za-z]{4}-[0-9A-Za-z]{4}-[0-9A-Za-z]{4}-[0-9A-Za-z]{12}",
     "Basic Auth Credentials": "[a-zA-Z]{3,10}://[^/\\s:@]{3,20}:[^/\\s:@]{3,20}@.{1,100}[\\\"'\\s]",
     "Dynatrace Token": "dt0[a-zA-Z]{1}[0-9]{2}\\.[A-Z0-9]{24}\\.[A-Z0-9]{64}",
     "Facebook Client ID": "(?i)(facebook|fb)(.{0,20})?['\\\"][0-9]{13,17}['\\\"]",
