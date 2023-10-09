@@ -21,6 +21,12 @@ BucketLoot comes with a guest mode by default, which means a user doesn't needs 
 </div>
 <hr style="height: 1px;">
 <div id="features">
+
+<h2> install </h2>
+```
+go install github.com/redhuntlabs/BucketLoot@latest
+```
+  
 <h2> Features </h2>
 
 <h4> Secret Scanning </h4>
