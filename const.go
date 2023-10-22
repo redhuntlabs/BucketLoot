@@ -23,12 +23,15 @@ var urlAssets []string
 var domAssets []string
 var subAssets []string
 var slowScan *bool
+var vulnFiles *bool
 var errorLogging *bool
 var fullScan *bool
 var scanKeywords []string
 
 var urlsFileList []fileListEntry
 var iniFileListData fileListData
+
+var vulnerableFileChecks []vulnFilesStruct
 
 var maxFileSize string
 var keywordSearch string
@@ -40,6 +43,14 @@ var awsBucketNameRe = regexp.MustCompile(`<Name>(.+?)<\/Name>`)
 //VAR DECLARATION FOR BUCKETLOOT OUTPUT
 
 var bucketlootOutput bucketLootOpStruct
+
+//BELOW IS THE STRUCTURE FOR PARSING THE VULNFILES JSON FILE
+type vulnFilesStruct struct {
+	Name    string `json:"Name"`
+	Type    string `json:"Type"`
+	Match   string `json:"Match"`
+	IsRegex bool   `json:"isRegex"`
+}
 
 //BELOW STRUCT ARE RELATED TO URLS WHOSE FILES ARE EXTRACTED.
 //First struct is for a single entry of ScanData array. It stores all the scannable bucket entries
@@ -76,6 +87,11 @@ type bucketlootSecretStruct struct {
 	URL  string `json:"url"`
 }
 
+type bucketlootSensitiveFileStruct struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
+}
+
 type bucketlootKeywordStruct struct {
 	URL     string `json:"url"`
 	Keyword string `json:"keyword"`
@@ -93,6 +109,10 @@ type bucketLootResStruct struct {
 		Name string `json:"name"`
 		URL  string `json:"url"`
 	} `json:"Secrets"`
+	SensitiveFiles []struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
+	} `json:"SensitiveFiles,omitempty"`
 	Keywords []struct {
 		URL     string `json:"url"`
 		Keyword string `json:"keyword"`
@@ -111,6 +131,10 @@ type bucketLootOpStruct struct {
 			Name string `json:"name"`
 			URL  string `json:"url"`
 		} `json:"Secrets"`
+		SensitiveFiles []struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"SensitiveFiles,omitempty"`
 		Keywords []struct {
 			URL     string `json:"url"`
 			Keyword string `json:"keyword"`
@@ -131,8 +155,9 @@ type platformCreds []struct {
 
 func init() {
 
-	bucketlootOutput.Version = "1.0"
+	bucketlootOutput.Version = "2.0"
 
+	//READ THE BLACKLIST EXTENSIONS FILE
 	file, err := os.Open("blacklist.txt")
 	if err != nil {
 		log.Fatalln("[Error] Looks like the tool is facing some issue while loading the specified file. [", err.Error(), "]")
@@ -144,12 +169,28 @@ func init() {
 		blacklistExtensions = append(blacklistExtensions, scanner.Text())
 	}
 
+	//READ THE REGEX JSON FILE AND PARSE IT
 	regexJSON, err := ioutil.ReadFile("regexes.json")
 	if err != nil {
 		log.Fatal(err)
 	}
 	if err := json.Unmarshal((regexJSON), &regexList); err != nil {
 		fmt.Println(err)
+		return
+	}
+
+	//READ THE VULNFILES JSON FILE AND PARSE IT
+	// Read the JSON file into a byte slice
+	data, err := ioutil.ReadFile("vulnFiles.json")
+	if err != nil {
+		fmt.Println("Error reading the JSON file:", err)
+		return
+	}
+
+	// Unmarshal the JSON data into the extensions slice
+	err = json.Unmarshal(data, &vulnerableFileChecks)
+	if err != nil {
+		fmt.Println("Error unmarshaling JSON:", err)
 		return
 	}
 

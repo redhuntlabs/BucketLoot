@@ -25,6 +25,8 @@ func main() {
 				allURLs = append(allURLs, arg)
 			} else if arg == "slow" || arg == "-slow" || arg == "--slow" {
 				*slowScan = true
+			} else if arg == "vulnfiles" || arg == "-vulnfiles" || arg == "--vulnfiles" {
+				*vulnFiles = true
 			} else if arg == "log-errors" || arg == "-log-errors" || arg == "--log-errors" {
 				*errorLogging = true
 			} else if arg == "full" || arg == "--full" || arg == "-full" {

@@ -1,0 +1,523 @@
+[{
+        "Name": "Potential cryptographic private key",
+        "Type": "extension",
+        "Match": "\\.pem",
+        "isRegex": false
+    },
+    {
+        "Name": "Potential cryptographic key bundle",
+        "Type": "extension",
+        "Match": "\\.pkcs12",
+        "isRegex": false
+    },
+    {
+        "Name": "Potential cryptographic key bundle",
+        "Type": "extension",
+        "Match": "\\.p12",
+        "isRegex": false
+    },
+    {
+        "Name": "Potential cryptographic key bundle",
+        "Type": "extension",
+        "Match": "\\.pfx",
+        "isRegex": false
+    },
+    {
+        "Name": "Potential cryptographic key bundle",
+        "Type": "extension",
+        "Match": "\\.asc",
+        "isRegex": false
+    },
+    {
+        "Name": "Kubernetes service account token",
+        "Type": "filename",
+        "Match": "token",
+        "isRegex": false
+    },
+    {
+        "Name": "Pidgin OTR private key",
+        "Type": "filename",
+        "Match": "otr\\.private_key",
+        "isRegex": false
+    },
+    {
+        "Name": "OpenVPN client configuration file",
+        "Type": "extension",
+        "Match": "\\.ovpn",
+        "isRegex": false
+    },
+    {
+        "Name": "Azure service configuration schema file",
+        "Type": "extension",
+        "Match": "\\.cscfg",
+        "isRegex": false
+    },
+    {
+        "Name": "Remote Desktop connection file",
+        "Type": "extension",
+        "Match": "\\.rdp",
+        "isRegex": false
+    },
+    {
+        "Name": "Microsoft SQL database file",
+        "Type": "extension",
+        "Match": "\\.mdf",
+        "isRegex": false
+    },
+    {
+        "Name": "Microsoft SQL server compact database file",
+        "Type": "extension",
+        "Match": "\\.sdf",
+        "isRegex": false
+    },
+    {
+        "Name": "SQLite database file",
+        "Type": "extension",
+        "Match": "\\.sqlite",
+        "isRegex": false
+    },
+    {
+        "Name": "SQLite3 database file",
+        "Type": "extension",
+        "Match": "\\.sqlite3",
+        "isRegex": false
+    },
+    {
+        "Name": "Microsoft BitLocker recovery key file",
+        "Type": "extension",
+        "Match": "\\.bek",
+        "isRegex": false
+    },
+    {
+        "Name": "Microsoft BitLocker Trusted Platform Module password file",
+        "Type": "extension",
+        "Match": "\\.tpm",
+        "isRegex": false
+    },
+    {
+        "Name": "Windows BitLocker full volume encrypted data file",
+        "Type": "extension",
+        "Match": "\\.fve",
+        "isRegex": false
+    },
+    {
+        "Name": "Java keystore file",
+        "Type": "extension",
+        "Match": "\\.jks",
+        "isRegex": false
+    },
+    {
+        "Name": "Password Safe database file",
+        "Type": "extension",
+        "Match": "\\.psafe3",
+        "isRegex": false
+    },
+    {
+        "Name": "Ruby On Rails secret token configuration file",
+        "Type": "filename",
+        "Match": "secret_token\\.rb",
+        "isRegex": false
+    },
+    {
+        "Name": "Carrierwave configuration file",
+        "Type": "filename",
+        "Match": "carrierwave\\.rb",
+        "isRegex": false
+    },
+    {
+        "Name": "Potential Ruby On Rails database configuration file",
+        "Type": "filename",
+        "Match": "database\\.yml",
+        "isRegex": false
+    },
+    {
+        "Name": "OmniAuth configuration file",
+        "Type": "filename",
+        "Match": "omniauth\\.rb",
+        "isRegex": false
+    },
+    {
+        "Name": "1Password password manager database file",
+        "Type": "extension",
+        "Match": "\\.agilekeychain",
+        "isRegex": false
+    },
+    {
+        "Name": "Apple Keychain database file",
+        "Type": "extension",
+        "Match": "\\.keychain",
+        "isRegex": false
+    },
+    {
+        "Name": "Network traffic capture file",
+        "Type": "extension",
+        "Match": "\\.pcap",
+        "isRegex": false
+    },
+    {
+        "Name": "GnuCash database file",
+        "Type": "extension",
+        "Match": "\\.gnucash",
+        "isRegex": false
+    },
+    {
+        "Name": "Jenkins publish over SSH plugin file",
+        "Type": "filename",
+        "Match": "jenkins\\.plugins\\.publish_over_ssh\\.BapSshPublisherPlugin\\.xml",
+        "isRegex": false
+    },
+    {
+        "Name": "Potential Jenkins credentials file",
+        "Type": "filename",
+        "Match": "credentials\\.xml",
+        "isRegex": false
+    },
+    {
+        "Name": "KDE Wallet Manager database file",
+        "Type": "extension",
+        "Match": "\\.kwallet",
+        "isRegex": false
+    },
+    {
+        "Name": "Potential MediaWiki configuration file",
+        "Type": "filename",
+        "Match": "LocalSettings\\.php",
+        "isRegex": false
+    },
+    {
+        "Name": "Tunnelblick VPN configuration file",
+        "Type": "extension",
+        "Match": "\\.tblk",
+        "isRegex": false
+    },
+    {
+        "Name": "Sequel Pro MySQL database manager bookmark file",
+        "Type": "filename",
+        "Match": "Favorites\\.plist",
+        "isRegex": false
+    },
+    {
+        "Name": "Little Snitch firewall configuration file",
+        "Type": "filename",
+        "Match": "configuration\\.user\\.xpl",
+        "isRegex": false
+    },
+    {
+        "Name": "Day One journal file",
+        "Type": "extension",
+        "Match": "\\.dayone",
+        "isRegex": false
+    },
+    {
+        "Name": "Potential jrnl journal file",
+        "Type": "filename",
+        "Match": "journal\\.txt",
+        "isRegex": false
+    },
+    {
+        "Name": "Chef Knife configuration file",
+        "Type": "filename",
+        "Match": "knife\\.rb",
+        "isRegex": false
+    },
+    {
+        "Name": "cPanel backup ProFTPd credentials file",
+        "Type": "filename",
+        "Match": "proftpdpasswd",
+        "isRegex": false
+    },
+    {
+        "Name": "Robomongo MongoDB manager configuration file",
+        "Type": "filename",
+        "Match": "robomongo\\.json",
+        "isRegex": false
+    },
+    {
+        "Name": "FileZilla FTP configuration file",
+        "Type": "filename",
+        "Match": "filezilla\\.xml",
+        "isRegex": false
+    },
+    {
+        "Name": "FileZilla FTP recent servers file",
+        "Type": "filename",
+        "Match": "recentservers\\.xml",
+        "isRegex": false
+    },
+    {
+        "Name": "Ventrilo server configuration file",
+        "Type": "filename",
+        "Match": "ventrilo_srv\\.ini",
+        "isRegex": false
+    },
+    {
+        "Name": "Terraform variable config file",
+        "Type": "filename",
+        "Match": "terraform\\.tfvars",
+        "isRegex": false
+    },
+    {
+        "Name": "Shell configuration file",
+        "Type": "filename",
+        "Match": "\\.exports",
+        "isRegex": false
+    },
+    {
+        "Name": "Shell configuration file",
+        "Type": "filename",
+        "Match": "\\.functions",
+        "isRegex": false
+    },
+    {
+        "Name": "Shell configuration file",
+        "Type": "filename",
+        "Match": "\\.extra",
+        "isRegex": false
+    },
+    {
+        "Name": "Private SSH key",
+        "Type": "filename",
+        "Match": "^\\.*_rsa$",
+        "isRegex": true
+    },
+    {
+        "Name": "Private SSH key",
+        "Type": "filename",
+        "Match": "^\\.*_dsa$",
+        "isRegex": true
+    },
+    {
+        "Name": "Private SSH key",
+        "Type": "filename",
+        "Match": "^\\.*_ed25519$",
+        "isRegex": true
+    },
+    {
+        "Name": "Private SSH key",
+        "Type": "filename",
+        "Match": "^\\.*_ecdsa$",
+        "isRegex": true
+    },
+    {
+        "Name": "Potential cryptographic private key",
+        "Type": "extension",
+        "Match": "^key(pair)?$",
+        "isRegex": true
+    },
+    {
+        "Name": "MySQL client command history file",
+        "Type": "filename",
+        "Match": "^\\\\.?mysql_history$",
+        "isRegex": true
+    },
+    {
+        "Name": "PostgreSQL client command history file",
+        "Type": "filename",
+        "Match": "^\\\\.?psql_history$",
+        "isRegex": true
+    },
+    {
+        "Name": "PostgreSQL password file",
+        "Type": "filename",
+        "Match": "^\\\\.?pgpass$",
+        "isRegex": true
+    },
+    {
+        "Name": "Ruby IRB console history file",
+        "Type": "filename",
+        "Match": "^\\\\.?irb_history$",
+        "isRegex": true
+    },
+    {
+        "Name": "DBeaver SQL database manager configuration file",
+        "Type": "filename",
+        "Match": "^\\\\.?dbeaver-data-sources\\.xml$",
+        "isRegex": true
+    },
+    {
+        "Name": "Mutt e-mail client configuration file",
+        "Type": "filename",
+        "Match": "^\\\\.?muttrc$",
+        "isRegex": true
+    },
+    {
+        "Name": "S3cmd configuration file",
+        "Type": "filename",
+        "Match": "^\\\\.?s3cfg$",
+        "isRegex": true
+    },
+    {
+        "Name": "SFTP connection configuration file",
+        "Type": "filename",
+        "Match": "^sftp-config(\\\\.json)?$",
+        "isRegex": true
+    },
+    {
+        "Name": "T command-line Twitter client configuration file",
+        "Type": "filename",
+        "Match": "^\\\\.?trc$",
+        "isRegex": true
+    },
+    {
+        "Name": "PHP configuration file",
+        "Type": "filename",
+        "Match": "config(\\\\.inc)?\\\\.php$",
+        "isRegex": true
+    },
+    {
+        "Name": "GNOME Keyring database file",
+        "Type": "extension",
+        "Match": "^key(store|ring)$",
+        "isRegex": true
+    },
+    {
+        "Name": "KeePass password manager database file",
+        "Type": "extension",
+        "Match": "^kdbx?$",
+        "isRegex": true
+    },
+    {
+        "Name": "SQL dump file",
+        "Type": "extension",
+        "Match": "^sql(dump)?$",
+        "isRegex": true
+    },
+    {
+        "Name": "Apache htpasswd file",
+        "Type": "filename",
+        "Match": "^\\\\.?htpasswd$",
+        "isRegex": true
+    },
+    {
+        "Name": "Configuration file for auto-login process",
+        "Type": "filename",
+        "Match": "^(\\\\.|_)?netrc$",
+        "isRegex": true
+    },
+    {
+        "Name": "Tugboat DigitalOcean management tool configuration",
+        "Type": "filename",
+        "Match": "^\\\\.?tugboat$",
+        "isRegex": true
+    },
+    {
+        "Name": "git-credential-store helper credentials file",
+        "Type": "filename",
+        "Match": "^\\\\.?git-credentials$",
+        "isRegex": true
+    },
+    {
+        "Name": "Git configuration file",
+        "Type": "filename",
+        "Match": "^\\\\.?gitconfig$",
+        "isRegex": true
+    },
+    {
+        "Name": "Docker configuration file",
+        "Type": "filename",
+        "Match": "^\\\\.?dockercfg$",
+        "isRegex": true
+    },
+    {
+        "Name": "NPM configuration file",
+        "Type": "filename",
+        "Match": "^\\\\.?npmrc$",
+        "isRegex": true
+    },
+    {
+        "Name": "Potential PuTTYgen private key",
+        "Type": "extension",
+        "Match": "\\.ppk",
+        "isRegex": false
+    },
+    {
+        "Name": "Heroku config file",
+        "Type": "filename",
+        "Match": "heroku\\.json",
+        "isRegex": false
+    },
+    {
+        "Name": "SQL Data dump file",
+        "Type": "extension",
+        "Match": "\\.sqldump",
+        "isRegex": false
+    },
+    {
+        "Name": "MySQL dump w/ bcrypt hashes",
+        "Type": "filename",
+        "Match": "dump\\.sql",
+        "isRegex": false
+    },
+    {
+        "Name": "Public ssh key",
+        "Type": "filename",
+        "Match": "id_rsa_pub",
+        "isRegex": false
+    },
+    {
+        "Name": "Public ssh key",
+        "Type": "filename",
+        "Match": "id_rsa\\.pub",
+        "isRegex": false
+    },
+    {
+        "Name": "Mongoid config file",
+        "Type": "filename",
+        "Match": "mongoid\\.yml",
+        "isRegex": false
+    },
+    {
+        "Name": "Salesforce credentials in a nodejs project",
+        "Type": "filename",
+        "Match": "salesforce\\.js",
+        "isRegex": false
+    },
+    {
+        "Name": "netrc with SMTP credentials",
+        "Type": "extension",
+        "Match": "\\.netrc",
+        "isRegex": false
+    },
+    {
+        "Name": "Created by remote-sync for Atom, contains FTP and/or SCP/SFTP/SSH server details and credentials",
+        "Type": "filename",
+        "Match": "\\.remote-sync\\.json$",
+        "isRegex": true
+    },
+    {
+        "Name": "esmtp configuration",
+        "Type": "filename",
+        "Match": "\\.esmtprc$",
+        "isRegex": true
+    },
+    {
+        "Name": "Created by sftp-deployment for Atom, contains server details and credentials",
+        "Type": "filename",
+        "Match": "^deployment-config\\.json?$",
+        "isRegex": true
+    },
+    {
+        "Name": "Created by sftp-deployment for Atom, contains server details and credentials",
+        "Type": "filename",
+        "Match": "\\.ftpconfig$",
+        "isRegex": true
+    },
+    {
+        "Name": "Bitcoin Core wallet",
+        "Type": "filename",
+        "Match": "wallet\\.dat",
+        "isRegex": false
+    },
+    {
+        "Name": "Private key for Bitcoin Core onion service",
+        "Type": "filename",
+        "Match": "onion_v3_private_key",
+        "isRegex": false
+    },
+    {
+        "Name": "Bitcoin Core config",
+        "Type": "filename",
+        "Match": "bitcoin\\.conf",
+        "isRegex": false
+    }
+]

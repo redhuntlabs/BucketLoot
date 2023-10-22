@@ -19,10 +19,14 @@ func scanS3FileSlow(fileURLs []string, bucketURL string) error {
 	bucketScanRes.BucketUrl = bucketURL
 
 	for _, fileURL := range fileURLs {
-		var bucketLootAsset bucketlootAssetStruct
-		var bucketLootSecret bucketlootSecretStruct
-		var bucketLootKeyword bucketlootKeywordStruct
-		var keywordDisc int
+		var (
+			bucketLootAsset   bucketlootAssetStruct
+			bucketLootSecret  bucketlootSecretStruct
+			bucketLootFile    bucketlootSensitiveFileStruct
+			bucketLootKeyword bucketlootKeywordStruct
+			keywordDisc       int
+		)
+
 		// Make HTTP request to S3 bucket URL
 		resp, err := http.Get(fileURL)
 		if err != nil {
@@ -61,6 +65,31 @@ func scanS3FileSlow(fileURLs []string, bucketURL string) error {
 				bucketScanRes.Secrets = append(bucketScanRes.Secrets, bucketLootSecret)
 				bucketLootSecret.Name = ""
 				bucketLootSecret.URL = ""
+			}
+		}
+
+		//LOOK FOR POTENTIALLY SENSITIVE/VULN FILES
+		if *vulnFiles {
+			for _, check := range vulnerableFileChecks {
+				// Compile the regex pattern
+				var re *regexp.Regexp
+				re, err = regexp.Compile(check.Match)
+				if err != nil {
+					errors = append(errors, fmt.Errorf("Error compiling vuln files regex %s", err))
+					continue
+				}
+
+				// Check if the pattern matches the fileURL
+				if re != nil {
+					if re.MatchString(fileURL) {
+						fmt.Printf("Discovered %v in %s\n", color.YellowString("POTENTIALLY SENSITIVE FILE["+check.Name+"]"), fileURL)
+						bucketLootFile.Name = check.Name
+						bucketLootFile.URL = fileURL
+						bucketScanRes.SensitiveFiles = append(bucketScanRes.SensitiveFiles, bucketLootFile)
+						bucketLootFile.Name = ""
+						bucketLootFile.URL = ""
+					}
+				}
 			}
 		}
 
@@ -143,6 +172,7 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 				bucketLootAsset   bucketlootAssetStruct
 				bucketLootSecret  bucketlootSecretStruct
 				bucketLootKeyword bucketlootKeywordStruct
+				bucketLootFile    bucketlootSensitiveFileStruct
 				keywordDisc       int
 			)
 
@@ -187,6 +217,33 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 					mu.Unlock()
 					bucketLootSecret.Name = ""
 					bucketLootSecret.URL = ""
+				}
+			}
+
+			//LOOK FOR POTENTIALLY SENSITIVE/VULN FILES
+			if *vulnFiles {
+				for _, check := range vulnerableFileChecks {
+					// Compile the regex pattern
+					var re *regexp.Regexp
+					re, err = regexp.Compile(check.Match)
+					if err != nil {
+						errors = append(errors, fmt.Errorf("Error compiling vuln files regex %s", err))
+						continue
+					}
+
+					// Check if the pattern matches the fileURL
+					if re != nil {
+						if re.MatchString(url) {
+							fmt.Printf("Discovered %v in %s\n", color.YellowString("POTENTIALLY SENSITIVE FILE["+check.Name+"]"), url)
+							bucketLootFile.Name = check.Name
+							bucketLootFile.URL = url
+							mu.Lock()
+							bucketScanRes.SensitiveFiles = append(bucketScanRes.SensitiveFiles, bucketLootFile)
+							mu.Unlock()
+							bucketLootFile.Name = ""
+							bucketLootFile.URL = ""
+						}
+					}
 				}
 			}
 
