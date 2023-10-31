@@ -23,7 +23,6 @@ var urlAssets []string
 var domAssets []string
 var subAssets []string
 var slowScan *bool
-var vulnFiles *bool
 var errorLogging *bool
 var fullScan *bool
 var scanKeywords []string

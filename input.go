@@ -11,7 +11,6 @@ import (
 func takeInput() {
 	slowScan = flag.Bool("slow", false, "Set slow mode for the scan")
 	fullScan = flag.Bool("full", false, "Go beyond the 1000 file scan limit [Requires additional setup!]")
-	vulnFiles = flag.Bool("vulnfiles", false, "Look for potentially sensitive or vulnerable files!")
 	flag.StringVar(&keywordSearch, "search", "", "Keyword(s) to look for during the scan. [Possible values -> keyword, keyword1:::keyword2, keywords.txt]")
 	flag.StringVar(&maxFileSize, "max-size", "", "Maximum file size (in bytes)")
 	errorLogging = flag.Bool("log-errors", false, "Log errors in final output")
