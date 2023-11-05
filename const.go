@@ -16,13 +16,17 @@ var bucketFileRE = regexp.MustCompile(`(?m)(?i)<key>(.+?)<\/key>`)
 var bucketSizeRE = regexp.MustCompile(`(?i)<Size>(.+?)<\/Size>`)
 var urlRE = regexp.MustCompile(`https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)`)
 var urlValidation = regexp.MustCompile(`^(?:(?:https?|ftp):\/\/)?(?:www\.)?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+(?:\/[^\s]*)?$`)
+var urlsRE = regexp.MustCompile(`(http[s]?:\/\/[^\s\/]+)\b`)
 var blacklistExtensions []string
 var isBlacklisted int
 var regexList map[string]string
+var diggedURLs []string
 var urlAssets []string
 var domAssets []string
+var unscannable []string
 var subAssets []string
 var slowScan *bool
+var digMode *bool
 var errorLogging *bool
 var fullScan *bool
 var scanKeywords []string
@@ -111,7 +115,7 @@ type bucketLootResStruct struct {
 	SensitiveFiles []struct {
 		Name string `json:"name"`
 		URL  string `json:"url"`
-	} `json:"SensitiveFiles,omitempty"`
+	} `json:"SensitiveFiles"`
 	Keywords []struct {
 		URL     string `json:"url"`
 		Keyword string `json:"keyword"`
@@ -133,7 +137,7 @@ type bucketLootOpStruct struct {
 		SensitiveFiles []struct {
 			Name string `json:"name"`
 			URL  string `json:"url"`
-		} `json:"SensitiveFiles,omitempty"`
+		} `json:"SensitiveFiles"`
 		Keywords []struct {
 			URL     string `json:"url"`
 			Keyword string `json:"keyword"`
@@ -193,6 +197,24 @@ func init() {
 		return
 	}
 
+}
+
+func uniqueStrings(input []string) []string {
+	// Create a map to store unique strings
+	uniqueMap := make(map[string]bool)
+
+	// Create a result slice to hold unique entries
+	uniqueEntries := []string{}
+
+	for _, str := range input {
+		if !uniqueMap[str] {
+			// If the string is not in the map, add it to the result slice and mark it as seen in the map
+			uniqueEntries = append(uniqueEntries, str)
+			uniqueMap[str] = true
+		}
+	}
+
+	return uniqueEntries
 }
 
 const banner = `

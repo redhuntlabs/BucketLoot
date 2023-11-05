@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/fatih/color"
 )
 
 func formatURL(urls []string) []string {
@@ -54,6 +55,111 @@ func readFile(fileName string) {
 	}
 }
 
+func listFilesOtherURLs(bucketURL string, fullScan bool) (otherbucketFiles [][]string, otherbucketSizes [][]string, err error) {
+	// Make an HTTP GET request to the provided URL
+	resp, err := http.Get(bucketURL)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer resp.Body.Close()
+
+	// Check response status code for errors
+	if resp.StatusCode != http.StatusOK {
+		return nil, nil, fmt.Errorf("Failed to retrieve data from %s. Status code: %d", bucketURL, resp.StatusCode)
+	}
+
+	// Read response body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Initialize slices to store bucketFiles and bucketSizes
+	var allFiles [][]string
+	var allFileSizes [][]string
+
+	if fullScan {
+		fmt.Println("Listing files using Full Mode... [Other URLs]")
+		//CHECKS FOR PLATFORMS
+		awsHeader := resp.Header.Get("X-Amz-Bucket-Region")
+
+		//CHECK IF THE SET BUCKET IS AN AWS-POWERED BUCKET
+		if awsHeader != "" {
+			fmt.Println("\nAWS S3 Bucket detected!")
+			if awsCreds == "AccessKey:SecretKey" || !strings.Contains(awsCreds, ":") {
+				fmt.Println("Invalid S3 credentials provided! Either use the correct credentials or re-run the scan without the full mode. [Other URLs]")
+				fmt.Println("Switching back to scrape mode... [Other URLs]")
+				allFiles = bucketFileRE.FindAllStringSubmatch(string(body), -1)
+				allFileSizes = bucketSizeRE.FindAllStringSubmatch(string(body), -1)
+			} else {
+				awsBucketNameRes := awsBucketNameRe.FindAllStringSubmatch(string(body), -1)
+				if awsBucketNameRes != nil {
+					awsBucketName := awsBucketNameRes[0][1]
+					awsKeys := strings.Split(awsCreds, ":")
+
+					// Initialize a new AWS session
+					sess, err := session.NewSession(&aws.Config{
+						Region:      aws.String(awsHeader), // Provide the appropriate AWS region
+						Credentials: credentials.NewStaticCredentials(awsKeys[0], awsKeys[1], ""),
+					})
+					if err != nil {
+						fmt.Println("Failed to create session [Other URLs]:", err)
+						return nil, nil, err
+					}
+
+					// Create a new S3 service client
+					svc := s3.New(sess)
+
+					// Retrieve the list of objects in the bucket
+					params := &s3.ListObjectsInput{
+						Bucket:  aws.String(awsBucketName),
+						MaxKeys: aws.Int64(1000),
+					}
+					err = svc.ListObjectsPages(params, func(page *s3.ListObjectsOutput, lastPage bool) bool {
+						for _, obj := range page.Contents {
+							// Perform your desired operations with each object here
+							filePath := *obj.Key
+							fileSize := fmt.Sprintf("%d", *obj.Size)
+
+							// Append the values to the respective 2D arrays
+							allFiles = append(allFiles, []string{"", filePath})
+							allFileSizes = append(allFileSizes, []string{"", fileSize})
+						}
+						return !lastPage
+					})
+					if err != nil {
+						if _, ok := err.(awserr.Error); ok {
+							bucketlootOutput.Errors = append(bucketlootOutput.Errors, string(err.Error()))
+							fmt.Println("Tool encountered an issue while scanning the bucket in Full Mode! Retrying with scrape mode... [Other URLs]")
+							allFiles = bucketFileRE.FindAllStringSubmatch(string(body), -1)
+							allFileSizes = bucketSizeRE.FindAllStringSubmatch(string(body), -1)
+						} else {
+							bucketlootOutput.Errors = append(bucketlootOutput.Errors, string(err.Error()))
+							fmt.Println("Tool encountered an issue while scanning the bucket in Full Mode! Retrying with scrape mode... [Other URLs]")
+							allFiles = bucketFileRE.FindAllStringSubmatch(string(body), -1)
+							allFileSizes = bucketSizeRE.FindAllStringSubmatch(string(body), -1)
+						}
+					}
+				} else {
+					fmt.Println("Tool encountered an issue while scanning the bucket in Full Mode! Retrying with scrape mode... [Other URLs]")
+					allFiles = bucketFileRE.FindAllStringSubmatch(string(body), -1)
+					allFileSizes = bucketSizeRE.FindAllStringSubmatch(string(body), -1)
+				}
+			}
+		} else {
+			fmt.Println("Unknown platform! Switching back to scrape mode... [Other URLs]")
+			allFiles = bucketFileRE.FindAllStringSubmatch(string(body), -1)
+			allFileSizes = bucketSizeRE.FindAllStringSubmatch(string(body), -1)
+		}
+	} else {
+		// Parse HTML to extract S3 object keys
+		allFiles = bucketFileRE.FindAllStringSubmatch(string(body), -1)
+		allFileSizes = bucketSizeRE.FindAllStringSubmatch(string(body), -1)
+	}
+
+	return allFiles, allFileSizes, nil
+}
+
 func listS3BucketFiles(bucketURLs []string) {
 	var wg sync.WaitGroup
 	var scannable []string
@@ -70,6 +176,7 @@ func listS3BucketFiles(bucketURLs []string) {
 		var intFiles []string
 		wg.Add(1)
 		go func(bucketURL string) {
+
 			defer wg.Done()
 			// Make HTTP request to S3 bucket URL
 			resp, err := http.Get(bucketURL)
@@ -210,13 +317,78 @@ func listS3BucketFiles(bucketURLs []string) {
 				urlsFileList = append(urlsFileList, listURL)
 				iniFileListData.ScanData = append(iniFileListData.ScanData, listURL)
 			} else {
-				notScannable = append(notScannable, bucketURL)
+				if *digMode {
+					if !strings.HasPrefix(string(body), "<?xml") { // IF THE STRING IS NOT A BUCKET
+						log.Println(bucketURL, "doesn't seems to be a storage bucket! Trying to extract URLs if any from the response. [Dig Mode]")
+						diggedURLs = uniqueStrings(urlsRE.FindAllString(string(body), -1))
+						if len(diggedURLs) > 0 {
+							log.Println("Found", len(diggedURLs), "URLs in", bucketURL)
+							for _, otherURL := range diggedURLs { // ITERATE OVER ALL THE URLS DISCOVERED
+								otherURL += "/"
+								otherbucketFiles, otherBucketSizes, err := listFilesOtherURLs(otherURL, *fullScan)
+								if err == nil {
+									if len(otherbucketFiles) > 0 { //ACTION TO PERFORM IF THE TOOL DISCOVERS FILES FROM THE BUCKET EXTRACTED
+										fmt.Printf("Discovered %v : %s\n", color.MagentaString("storage bucket with files"), otherURL)
+										for i := 0; i < len(otherbucketFiles) && i < len(otherBucketSizes); i++ { // ITERATE OVER ALL THE BUCKET FILES DISCOVERED
+											othbucketFile := otherbucketFiles[i]
+											othbucketFileSize := otherBucketSizes[i]
+											isBlacklisted = 0
+											for _, blacklistExtension := range blacklistExtensions {
+												if strings.Contains(strings.ToLower(othbucketFile[1]), blacklistExtension) {
+													isBlacklisted = 1
+													break
+												}
+											}
+											if isBlacklisted == 0 {
+												if maxFileSize != "" {
+													buckfileSize, err := strconv.ParseInt(othbucketFileSize[1], 10, 64)
+													if err == nil {
+														maxbucketfilesize, err := strconv.ParseInt(maxFileSize, 10, 64)
+														if err == nil {
+															if buckfileSize <= maxbucketfilesize {
+																intFiles = append(intFiles, bucketURL+othbucketFile[1])
+																totalIntFiles += 1
+															}
+														}
+													}
+												} else {
+													intFiles = append(intFiles, bucketURL+othbucketFile[1])
+													totalIntFiles += 1
+												}
+											}
+											allFiles = append(allFiles, otherURL+othbucketFile[1])
+											totalFiles += 1
+										} //FINISH ITERATING OVER ALL THE FILES DISCOVERED
+										//////////////////////////////EDIT HERE///////////////////
+										scannable = append(scannable, otherURL)
+										listURL = fileListEntry{URL: otherURL, AllFiles: allFiles, IntFiles: intFiles}
+										urlsFileList = append(urlsFileList, listURL)
+										iniFileListData.ScanData = append(iniFileListData.ScanData, listURL)
+									} else { // TOOL DOESN'T CATCHES ANY FILES FROM THE BUCKET DISCOVERED
+										unscannable = append(unscannable, bucketURL)
+									}
+								} else { // IF THERE WAS AN ERROR MAKING THE REQUEST
+									unscannable = append(unscannable, bucketURL)
+								}
+							}
+						} else { // IF NO URLS WERE DISCOVERED
+							unscannable = append(unscannable, bucketURL)
+						}
+					} else {
+						unscannable = append(unscannable, bucketURL)
+					}
+					if len(unscannable) > 0 {
+						notScannable = append(notScannable, uniqueStrings(unscannable)...)
+					}
+				} else { // WHEN DIGMODE IS SET TO FALSE
+					notScannable = append(notScannable, bucketURL)
+				}
 			}
 		}(bucketURL)
 	}
 	wg.Wait()
-	iniFileListData.Scannable = append(iniFileListData.Scannable, scannable...)
-	iniFileListData.NotScannable = append(iniFileListData.NotScannable, notScannable...)
+	iniFileListData.Scannable = append(iniFileListData.Scannable, uniqueStrings(scannable)...)
+	iniFileListData.NotScannable = append(iniFileListData.NotScannable, uniqueStrings(notScannable)...)
 	iniFileListData.TotalFiles = totalFiles
 	iniFileListData.TotalIntFiles = totalIntFiles
 }
