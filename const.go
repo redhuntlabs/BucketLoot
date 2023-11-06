@@ -47,6 +47,15 @@ var awsBucketNameRe = regexp.MustCompile(`<Name>(.+?)<\/Name>`)
 
 var bucketlootOutput bucketLootOpStruct
 
+//STRUCT FOR STORING SECRET REGEXES
+type Rule struct {
+	Regex    string `json:"Regex"`
+	Severity string `json:"Severity"`
+	Title    string `json:"Title"`
+}
+
+var rules []Rule
+
 //BELOW IS THE STRUCTURE FOR PARSING THE VULNFILES JSON FILE
 type vulnFilesStruct struct {
 	Name    string `json:"Name"`
@@ -86,8 +95,9 @@ type bucketlootAssetStruct struct {
 }
 
 type bucketlootSecretStruct struct {
-	Name string `json:"name"`
-	URL  string `json:"url"`
+	Name     string `json:"name"`
+	URL      string `json:"url"`
+	Severity string `json:"severity"`
 }
 
 type bucketlootSensitiveFileStruct struct {
@@ -109,8 +119,9 @@ type bucketLootResStruct struct {
 		Subdomain string `json:"subdomain"`
 	} `json:"Assets"`
 	Secrets []struct {
-		Name string `json:"name"`
-		URL  string `json:"url"`
+		Name     string `json:"name"`
+		URL      string `json:"url"`
+		Severity string `json:"severity"`
 	} `json:"Secrets"`
 	SensitiveFiles []struct {
 		Name string `json:"name"`
@@ -131,8 +142,9 @@ type bucketLootOpStruct struct {
 			Subdomain string `json:"subdomain"`
 		} `json:"Assets"`
 		Secrets []struct {
-			Name string `json:"name"`
-			URL  string `json:"url"`
+			Name     string `json:"name"`
+			URL      string `json:"url"`
+			Severity string `json:"severity"`
 		} `json:"Secrets"`
 		SensitiveFiles []struct {
 			Name string `json:"name"`
@@ -173,13 +185,15 @@ func init() {
 	}
 
 	//READ THE REGEX JSON FILE AND PARSE IT
-	regexJSON, err := ioutil.ReadFile("regexes.json")
+	regFile, err := os.Open("regexes.json")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error opening file: %v", err)
 	}
-	if err := json.Unmarshal((regexJSON), &regexList); err != nil {
-		fmt.Println(err)
-		return
+	defer file.Close()
+
+	decoder := json.NewDecoder(regFile)
+	if err := decoder.Decode(&rules); err != nil {
+		log.Fatalf("Error decoding JSON: %v", err)
 	}
 
 	//READ THE VULNFILES JSON FILE AND PARSE IT

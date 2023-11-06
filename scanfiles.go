@@ -56,12 +56,13 @@ func scanS3FileSlow(fileURLs []string, bucketURL string) error {
 
 		// Parse HTML to scan S3 Files
 		//Extract Secrets
-		for regName, regValue := range regexList {
-			reg := regexp.MustCompile(regValue)
+		for _, rule := range rules {
+			reg := regexp.MustCompile(rule.Regex)
 			if reg.MatchString(string(body)) {
-				fmt.Printf("Discovered %v in %s\n", color.RedString("SECRET["+regName+"]"), fileURL)
-				bucketLootSecret.Name = regName
+				fmt.Printf("Discovered %v in %s\n", color.RedString("SECRET["+rule.Title+"]"), fileURL)
+				bucketLootSecret.Name = rule.Title
 				bucketLootSecret.URL = fileURL
+				bucketLootSecret.Severity = rule.Severity
 				bucketScanRes.Secrets = append(bucketScanRes.Secrets, bucketLootSecret)
 				bucketLootSecret.Name = ""
 				bucketLootSecret.URL = ""
@@ -203,13 +204,13 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 				mu.Unlock()
 				return
 			}
-
-			for regName, regValue := range regexList {
-				reg := regexp.MustCompile(regValue)
+			for _, rule := range rules {
+				reg := regexp.MustCompile(rule.Regex)
 				if reg.MatchString(string(body)) {
-					fmt.Printf("Discovered %v in %s\n", color.RedString("SECRET["+regName+"]"), url)
-					bucketLootSecret.Name = regName
+					fmt.Printf("Discovered %v in %s\n", color.RedString("SECRET["+rule.Title+"]"), url)
+					bucketLootSecret.Name = rule.Title
 					bucketLootSecret.URL = url
+					bucketLootSecret.Severity = rule.Severity
 					mu.Lock()
 					bucketScanRes.Secrets = append(bucketScanRes.Secrets, bucketLootSecret)
 					mu.Unlock()
@@ -217,7 +218,6 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 					bucketLootSecret.URL = ""
 				}
 			}
-
 			//LOOK FOR POTENTIALLY SENSITIVE/VULN FILES
 			for _, check := range vulnerableFileChecks {
 				// Compile the regex pattern
