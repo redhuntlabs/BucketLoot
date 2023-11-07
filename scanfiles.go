@@ -19,6 +19,10 @@ var tempFileSuffix = "temp_s3_file_"
 func scanS3FilesSlow(fileURLs []string, bucketURL string) error {
 	var errors []error
 
+	if err := os.MkdirAll(tempDir, 0755); err != nil {
+		return err
+	}
+
 	//BELOW CODE BLOCK IS FOR ARRANGING BUCKETLOOT OUTPUT
 	var bucketScanRes bucketLootResStruct
 	bucketScanRes.BucketUrl = bucketURL
@@ -32,7 +36,15 @@ func scanS3FilesSlow(fileURLs []string, bucketURL string) error {
 			keywordDisc       int
 		)
 
-		// Make HTTP request to S3 bucket URL
+		// Create a temporary file in the custom directory to store the downloaded content
+		tempFile, err := ioutil.TempFile(tempDir, tempFileSuffix)
+		if err != nil {
+			errors = append(errors, fmt.Errorf("error creating temporary file: %v", err))
+			continue
+		}
+		defer tempFile.Close()
+
+		// Make HTTP request to S3 bucket
 		resp, err := http.Get(fileURL)
 		if err != nil {
 			errors = append(errors, fmt.Errorf("error making HTTP request to S3 bucket file URL: %v", err))
@@ -40,7 +52,18 @@ func scanS3FilesSlow(fileURLs []string, bucketURL string) error {
 		}
 		defer resp.Body.Close()
 
-		// Check response status code for errors
+		_, err = io.Copy(tempFile, resp.Body)
+		if err != nil {
+			errors = append(errors, fmt.Errorf("error copying response body to temporary file: %v", err))
+			continue
+		}
+
+		body, err := ioutil.ReadFile(tempFile.Name())
+		if err != nil {
+			errors = append(errors, fmt.Errorf("error reading content from the temporary file: %v", err))
+			continue
+		}
+
 		if resp.StatusCode != http.StatusOK {
 			if resp.StatusCode == http.StatusNotFound {
 				errors = append(errors, fmt.Errorf("s3 bucket file not found: %s", fileURL))
@@ -49,13 +72,6 @@ func scanS3FilesSlow(fileURLs []string, bucketURL string) error {
 			} else {
 				errors = append(errors, fmt.Errorf("unexpected response status code from S3 bucket file URL: %d: %s", resp.StatusCode, fileURL))
 			}
-			continue
-		}
-
-		// Read response body
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			errors = append(errors, fmt.Errorf("error reading response body from S3 bucket file URL: %v: %s", err, fileURL))
 			continue
 		}
 
@@ -144,6 +160,9 @@ func scanS3FilesSlow(fileURLs []string, bucketURL string) error {
 			fmt.Printf("Discovered %v in %s\n", color.GreenString("Keyword(s)"), fileURL)
 		}
 	}
+
+	os.RemoveAll(tempDir)
+
 	bucketlootOutput.Results = append(bucketlootOutput.Results, bucketScanRes)
 	if len(errors) > 0 {
 		for _, err := range errors {
@@ -216,7 +235,6 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 			}
 			defer tempFile.Close()
 
-			// Copy the response body to the temporary file
 			_, err = io.Copy(tempFile, resp.Body)
 			if err != nil {
 				mu.Lock()
@@ -225,7 +243,6 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 				return
 			}
 
-			// Read the content from the temporary file
 			body, err := ioutil.ReadFile(tempFile.Name())
 			if err != nil {
 				mu.Lock()
