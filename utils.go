@@ -4,10 +4,12 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"sync"
@@ -19,6 +21,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/fatih/color"
 )
+
+var tempDir = ".temp"
 
 func formatURL(urls []string) []string {
 	modifiedURLs := make([]string, 0, len(urls))
@@ -34,6 +38,43 @@ func formatURL(urls []string) []string {
 		modifiedURLs = append(modifiedURLs, url)
 	}
 	return modifiedURLs
+}
+
+func DownloadFileToTempDir(fileURL, tempDir string) (string, error) {
+	// Create the temporary directory if it doesn't exist
+	if err := os.MkdirAll(tempDir, os.ModePerm); err != nil {
+		return "", err
+	}
+
+	// Extract the filename from the URL
+	fileName := path.Join(tempDir, path.Base(fileURL))
+
+	// Create a new file to write the downloaded content
+	outFile, err := os.Create(fileName)
+	if err != nil {
+		return "", err
+	}
+	defer outFile.Close()
+
+	// Make the HTTP request to download the file
+	resp, err := http.Get(fileURL)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	// Check the response status code
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("unexpected response status code: %d", resp.StatusCode)
+	}
+
+	// Copy the response body to the file
+	_, err = io.Copy(outFile, resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return fileName, nil
 }
 
 func readFile(fileName string) {
