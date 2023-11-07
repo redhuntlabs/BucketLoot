@@ -14,6 +14,7 @@ import (
 )
 
 var tempDir = ".temp"
+var tempFileSuffix = "temp_s3_file_"
 
 func scanS3FilesSlow(fileURLs []string, bucketURL string) error {
 	var errors []error
@@ -206,7 +207,7 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 			}
 
 			// Create a temporary file in the custom directory to store the downloaded content
-			tempFile, err := ioutil.TempFile(tempDir, "s3file")
+			tempFile, err := ioutil.TempFile(tempDir, tempFileSuffix)
 			if err != nil {
 				mu.Lock()
 				errors = append(errors, fmt.Errorf("error creating temporary file: %v", err))
