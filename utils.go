@@ -22,8 +22,6 @@ import (
 	"github.com/fatih/color"
 )
 
-var tempDir = ".temp"
-
 func formatURL(urls []string) []string {
 	modifiedURLs := make([]string, 0, len(urls))
 
@@ -40,7 +38,7 @@ func formatURL(urls []string) []string {
 	return modifiedURLs
 }
 
-func DownloadFileToTempDir(fileURL, tempDir string) (string, error) {
+func DownloadFileToTempDir(fileURL string) (string, error) {
 	// Create the temporary directory if it doesn't exist
 	if err := os.MkdirAll(tempDir, os.ModePerm); err != nil {
 		return "", err

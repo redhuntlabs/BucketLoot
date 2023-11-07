@@ -6,14 +6,14 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path/filepath"
 	"regexp"
 	"sync"
 
 	"github.com/fatih/color"
-	"github.com/google/uuid"
 	tld "github.com/jpillora/go-tld"
 )
+
+var tempDir = ".temp"
 
 func scanS3FilesSlow(fileURLs []string, bucketURL string) error {
 	var errors []error
@@ -160,16 +160,14 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 	var mu sync.Mutex
 	var errors []error
 
+	// Create a temporary directory in the current working directory
+	if err := os.MkdirAll(tempDir, 0755); err != nil {
+		return err
+	}
+
 	bucketScanRes := bucketLootResStruct{
 		BucketUrl: bucketURL,
 	}
-
-	// Create a temporary directory to store downloaded files
-	tmpDir, err := ioutil.TempDir("", "s3_scan_temp")
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(tmpDir) // Ensure the temporary directory is cleaned up when done
 
 	for _, fileURL := range fileURLs {
 		wg.Add(1)
@@ -184,9 +182,6 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 				bucketLootFile    bucketlootSensitiveFileStruct
 				keywordDisc       int
 			)
-
-			randomFilename := fmt.Sprintf("%s", uuid.New())
-			filePath := filepath.Join(tmpDir, randomFilename)
 
 			resp, err := http.Get(url)
 			if err != nil {
@@ -210,28 +205,30 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 				return
 			}
 
-			downloadedFile, err := os.Create(filePath)
+			// Create a temporary file in the custom directory to store the downloaded content
+			tempFile, err := ioutil.TempFile(tempDir, "s3file")
 			if err != nil {
 				mu.Lock()
-				errors = append(errors, fmt.Errorf("error reading response body from S3 bucket file URL: %v: %s", err, url))
+				errors = append(errors, fmt.Errorf("error creating temporary file: %v", err))
 				mu.Unlock()
 				return
 			}
-			defer downloadedFile.Close()
+			defer tempFile.Close()
 
-			_, err = io.Copy(downloadedFile, resp.Body)
+			// Copy the response body to the temporary file
+			_, err = io.Copy(tempFile, resp.Body)
 			if err != nil {
 				mu.Lock()
-				errors = append(errors, fmt.Errorf("error writing the downloaded content to a temporary file: %v", err))
+				errors = append(errors, fmt.Errorf("error copying response body to temporary file: %v", err))
 				mu.Unlock()
 				return
 			}
 
-			// Read the downloaded file and process it
-			body, err := ioutil.ReadFile(filePath)
+			// Read the content from the temporary file
+			body, err := ioutil.ReadFile(tempFile.Name())
 			if err != nil {
 				mu.Lock()
-				errors = append(errors, fmt.Errorf("error reading the temporary file: %v", err))
+				errors = append(errors, fmt.Errorf("error reading content from the temporary file: %v", err))
 				mu.Unlock()
 				return
 			}
@@ -330,12 +327,7 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 				fmt.Printf("Discovered %v in %s\n", color.GreenString("Keyword(s)"), url)
 			}
 
-			err = os.Remove(filePath)
-			if err != nil {
-				mu.Lock()
-				errors = append(errors, fmt.Errorf("error removing the temporary file: %v", err))
-				mu.Unlock()
-			}
+			os.RemoveAll(tempDir)
 
 		}(fileURL)
 	}
