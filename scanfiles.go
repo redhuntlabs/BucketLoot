@@ -179,7 +179,7 @@ func scanS3FilesSlow(fileURLs []string, bucketURL string) error {
 
 func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 	var wg sync.WaitGroup
-	var mu sync.Mutex
+	var mutex sync.Mutex
 	var errors []error
 	var downloadedFiles []string
 
@@ -190,6 +190,8 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 		bucketLootFile    bucketlootSensitiveFileStruct
 		keywordDisc       int
 	)
+
+	os.RemoveAll(tempDir)
 
 	// Create a temporary directory in the current working directory
 	if err := os.MkdirAll(tempDir, 0755); err != nil {
@@ -208,15 +210,15 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 
 			resp, err := http.Get(url)
 			if err != nil {
-				mu.Lock()
+				mutex.Lock()
 				errors = append(errors, fmt.Errorf("error making HTTP request to S3 bucket file URL: %v", err))
-				mu.Unlock()
+				mutex.Unlock()
 				return
 			}
 			defer resp.Body.Close()
 
 			if resp.StatusCode != http.StatusOK {
-				mu.Lock()
+				mutex.Lock()
 				if resp.StatusCode == http.StatusNotFound {
 					errors = append(errors, fmt.Errorf("s3 bucket file not found: %s", url))
 				} else if resp.StatusCode == http.StatusForbidden {
@@ -224,25 +226,25 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 				} else {
 					errors = append(errors, fmt.Errorf("unexpected response status code from S3 bucket file URL: %d: %s", resp.StatusCode, url))
 				}
-				mu.Unlock()
+				mutex.Unlock()
 				return
 			}
 
 			// Create a temporary file in the custom directory to store the downloaded content
 			tempFile, err := ioutil.TempFile(tempDir, tempFileSuffix)
 			if err != nil {
-				mu.Lock()
+				mutex.Lock()
 				errors = append(errors, fmt.Errorf("error creating temporary file: %v", err))
-				mu.Unlock()
+				mutex.Unlock()
 				return
 			}
 			defer tempFile.Close()
 
 			_, err = io.Copy(tempFile, resp.Body)
 			if err != nil {
-				mu.Lock()
+				mutex.Lock()
 				errors = append(errors, fmt.Errorf("error copying response body to temporary file: %v", err))
-				mu.Unlock()
+				mutex.Unlock()
 				return
 			}
 
@@ -250,9 +252,9 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 			tempFile.WriteString("\n" + base64.StdEncoding.EncodeToString([]byte(url)))
 			tempFile.Close()
 
-			mu.Lock()
+			mutex.Lock()
 			downloadedFiles = append(downloadedFiles, tempFile.Name())
-			mu.Unlock()
+			mutex.Unlock()
 
 		}(fileURL)
 	}
@@ -260,113 +262,122 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 	wg.Wait()
 
 	for _, filePath := range downloadedFiles {
-		body, err := ioutil.ReadFile(filePath)
-		lines := strings.Split(string(body), "\n")
-		urlByte, err := base64.StdEncoding.DecodeString(lines[len(lines)-1])
-		url := string(urlByte)
+		wg.Add(1)
 
-		if err != nil {
-			mu.Lock()
-			errors = append(errors, fmt.Errorf("error reading content from the temporary file: %v", err))
-			mu.Unlock()
-			continue
-		}
+		go func(filePath string) {
+			defer wg.Done()
 
-		for regName, regValue := range regexList {
-			reg := regexp.MustCompile(regValue)
-			if reg.MatchString(string(body)) {
-				fmt.Printf("Discovered %v in %s\n", color.RedString("SECRET["+regName+"]"), url)
-				bucketLootSecret.Name = regName
-				bucketLootSecret.URL = url
-				mu.Lock()
-				bucketScanRes.Secrets = append(bucketScanRes.Secrets, bucketLootSecret)
-				mu.Unlock()
-				bucketLootSecret.Name = ""
-				bucketLootSecret.URL = ""
-			}
-		}
+			body, err := ioutil.ReadFile(filePath)
+			lines := strings.Split(string(body), "\n")
+			urlByte, err := base64.StdEncoding.DecodeString(lines[len(lines)-1])
+			url := string(urlByte)
 
-		//LOOK FOR POTENTIALLY SENSITIVE/VULN FILES
-		for _, check := range vulnerableFileChecks {
-			// Compile the regex pattern
-			var re *regexp.Regexp
-			re, err = regexp.Compile(check.Match)
 			if err != nil {
-				errors = append(errors, fmt.Errorf("Error compiling vuln files regex %s", err))
-				continue
+				mutex.Lock()
+				errors = append(errors, fmt.Errorf("error reading content from the temporary file: %v", err))
+				mutex.Unlock()
+				return
 			}
 
-			// Check if the pattern matches the fileURL
-			if re != nil {
-				if re.MatchString(url) {
-					fmt.Printf("Discovered %v in %s\n", color.YellowString("POTENTIALLY SENSITIVE FILE["+check.Name+"]"), url)
-					bucketLootFile.Name = check.Name
-					bucketLootFile.URL = url
-					mu.Lock()
-					bucketScanRes.SensitiveFiles = append(bucketScanRes.SensitiveFiles, bucketLootFile)
-					mu.Unlock()
-					bucketLootFile.Name = ""
-					bucketLootFile.URL = ""
+			for regName, regValue := range regexList {
+				reg := regexp.MustCompile(regValue)
+				if reg.MatchString(string(body)) {
+					fmt.Printf("Discovered %v in %s\n", color.RedString("SECRET["+regName+"]"), url)
+					bucketLootSecret.Name = regName
+					bucketLootSecret.URL = url
+					mutex.Lock()
+					bucketScanRes.Secrets = append(bucketScanRes.Secrets, bucketLootSecret)
+					mutex.Unlock()
+					bucketLootSecret.Name = ""
+					bucketLootSecret.URL = ""
 				}
 			}
-		}
 
-		extURLs := urlRE.FindAllString(string(body), -1)
-		mu.Lock()
-		urlAssets = append(urlAssets, extURLs...)
-		mu.Unlock()
-		if len(extURLs) > 0 {
-			fmt.Printf("Discovered %v in %s\n", color.BlueString("URL(s)"), url)
-		}
-
-		for _, u := range extURLs {
-			bucketLootAsset.URL = u
-			asset, err := tld.Parse(u)
-			if err == nil {
-				mu.Lock()
-				domAssets = append(domAssets, asset.Domain+"."+asset.TLD)
-				bucketLootAsset.Domain = asset.Domain + "." + asset.TLD
-				if asset.Subdomain != "" {
-					subAssets = append(subAssets, asset.Subdomain+"."+asset.Domain+"."+asset.TLD)
-					bucketLootAsset.Subdomain = asset.Subdomain + "." + asset.Domain + "." + asset.TLD
+			//LOOK FOR POTENTIALLY SENSITIVE/VULN FILES
+			for _, check := range vulnerableFileChecks {
+				// Compile the regex pattern
+				var re *regexp.Regexp
+				re, err = regexp.Compile(check.Match)
+				if err != nil {
+					errors = append(errors, fmt.Errorf("Error compiling vuln files regex %s", err))
+					continue
 				}
-				mu.Unlock()
-			}
-			mu.Lock()
-			bucketScanRes.Assets = append(bucketScanRes.Assets, bucketLootAsset)
-			mu.Unlock()
-			bucketLootAsset.URL = ""
-			bucketLootAsset.Domain = ""
-			bucketLootAsset.Subdomain = ""
-		}
 
-		for _, keyword := range scanKeywords {
-			keywordRe := regexp.MustCompile(keyword)
-			if keywordRe.MatchString(url) {
-				bucketLootKeyword.Keyword = keyword
-				bucketLootKeyword.URL = url
-				bucketLootKeyword.Type = "FilePath"
-				mu.Lock()
-				bucketScanRes.Keywords = append(bucketScanRes.Keywords, bucketLootKeyword)
-				keywordDisc = 1
-				mu.Unlock()
+				// Check if the pattern matches the fileURL
+				if re != nil {
+					if re.MatchString(url) {
+						fmt.Printf("Discovered %v in %s\n", color.YellowString("POTENTIALLY SENSITIVE FILE["+check.Name+"]"), url)
+						bucketLootFile.Name = check.Name
+						bucketLootFile.URL = url
+						mutex.Lock()
+						bucketScanRes.SensitiveFiles = append(bucketScanRes.SensitiveFiles, bucketLootFile)
+						mutex.Unlock()
+						bucketLootFile.Name = ""
+						bucketLootFile.URL = ""
+					}
+				}
 			}
-			if keywordRe.MatchString(string(body)) {
-				bucketLootKeyword.Keyword = keyword
-				bucketLootKeyword.URL = url
-				bucketLootKeyword.Type = "FileContent"
-				mu.Lock()
-				bucketScanRes.Keywords = append(bucketScanRes.Keywords, bucketLootKeyword)
-				keywordDisc = 1
-				mu.Unlock()
-			}
-		}
 
-		if keywordDisc == 1 {
-			fmt.Printf("Discovered %v in %s\n", color.GreenString("Keyword(s)"), url)
-		}
+			extURLs := urlRE.FindAllString(string(body), -1)
+			mutex.Lock()
+			urlAssets = append(urlAssets, extURLs...)
+			mutex.Unlock()
+			if len(extURLs) > 0 {
+				fmt.Printf("Discovered %v in %s\n", color.BlueString("URL(s)"), url)
+			}
+
+			for _, u := range extURLs {
+				bucketLootAsset.URL = u
+				asset, err := tld.Parse(u)
+				if err == nil {
+					mutex.Lock()
+					domAssets = append(domAssets, asset.Domain+"."+asset.TLD)
+					bucketLootAsset.Domain = asset.Domain + "." + asset.TLD
+					if asset.Subdomain != "" {
+						subAssets = append(subAssets, asset.Subdomain+"."+asset.Domain+"."+asset.TLD)
+						bucketLootAsset.Subdomain = asset.Subdomain + "." + asset.Domain + "." + asset.TLD
+					}
+					mutex.Unlock()
+				}
+				mutex.Lock()
+				bucketScanRes.Assets = append(bucketScanRes.Assets, bucketLootAsset)
+				mutex.Unlock()
+				bucketLootAsset.URL = ""
+				bucketLootAsset.Domain = ""
+				bucketLootAsset.Subdomain = ""
+			}
+
+			for _, keyword := range scanKeywords {
+				keywordRe := regexp.MustCompile(keyword)
+				if keywordRe.MatchString(url) {
+					bucketLootKeyword.Keyword = keyword
+					bucketLootKeyword.URL = url
+					bucketLootKeyword.Type = "FilePath"
+					mutex.Lock()
+					bucketScanRes.Keywords = append(bucketScanRes.Keywords, bucketLootKeyword)
+					keywordDisc = 1
+					mutex.Unlock()
+				}
+				if keywordRe.MatchString(string(body)) {
+					bucketLootKeyword.Keyword = keyword
+					bucketLootKeyword.URL = url
+					bucketLootKeyword.Type = "FileContent"
+					mutex.Lock()
+					bucketScanRes.Keywords = append(bucketScanRes.Keywords, bucketLootKeyword)
+					keywordDisc = 1
+					mutex.Unlock()
+				}
+			}
+
+			if keywordDisc == 1 {
+				fmt.Printf("Discovered %v in %s\n", color.GreenString("Keyword(s)"), url)
+			}
+
+		}(filePath)
 
 	}
+
+	wg.Wait()
 
 	os.RemoveAll(tempDir)
 
