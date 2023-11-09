@@ -27,6 +27,8 @@ func main() {
 				*slowScan = true
 			} else if arg == "dig" || arg == "-dig" || arg == "--dig" {
 				*digMode = true
+			} else if arg == "notify" || arg == "-notify" || arg == "--notify" {
+				*notify = true
 			} else if arg == "log-errors" || arg == "-log-errors" || arg == "--log-errors" {
 				*errorLogging = true
 			} else if arg == "full" || arg == "--full" || arg == "-full" {
@@ -95,6 +97,14 @@ func main() {
 					saveOutput = "output.json"
 				}
 				i++ // Skip the next argument since it has been processed
+			}
+		}
+		if *notify {
+			notifyErr := loadNotifyConfig()
+			if notifyErr != nil {
+				fmt.Println("Looks like these is some issue with your notifyconfig file:", notifyErr)
+				toJSON()
+				os.Exit(1)
 			}
 		}
 		allURLs = formatURL(allURLs)

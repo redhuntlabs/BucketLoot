@@ -27,6 +27,7 @@ var unscannable []string
 var subAssets []string
 var slowScan *bool
 var digMode *bool
+var notify *bool
 var errorLogging *bool
 var fullScan *bool
 var scanKeywords []string
@@ -167,6 +168,14 @@ type platformCreds []struct {
 	Platform    string `json:"platform"`
 	Credentials string `json:"credentials"`
 }
+
+// STRUCT FOR DECODING notificationConfig.json
+type notifyconf struct {
+	Discord string `json:"Discord"`
+	Slack   string `json:"Slack"`
+}
+
+var platforms []notifyconf
 
 func init() {
 

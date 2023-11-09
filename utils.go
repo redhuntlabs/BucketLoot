@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -438,4 +439,47 @@ func readCredsFile() {
 		}
 	}
 
+}
+
+func loadNotifyConfig() error {
+	fileContent, err := ioutil.ReadFile("notifyConfig.json")
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(fileContent, &platforms)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func notifyDiscord(webhookURL, message string) error {
+	jsonData := fmt.Sprintf(`{"content":"%s"}`, message)
+
+	resp, err := http.Post(webhookURL, "application/json", bytes.NewBufferString(jsonData))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+func notifySlack(webhookURL, message string) error {
+	jsonData := fmt.Sprintf(`{"text":"%s"}`, message)
+
+	resp, err := http.Post(webhookURL, "application/json", bytes.NewBufferString(jsonData))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	fmt.Println(resp.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+	return nil
 }

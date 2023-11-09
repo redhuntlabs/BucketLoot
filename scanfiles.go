@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/fatih/color"
@@ -66,6 +67,31 @@ func scanS3FileSlow(fileURLs []string, bucketURL string) error {
 				bucketScanRes.Secrets = append(bucketScanRes.Secrets, bucketLootSecret)
 				bucketLootSecret.Name = ""
 				bucketLootSecret.URL = ""
+
+				if *notify {
+					if platforms[0].Discord != "" {
+						err := notifyDiscord(platforms[0].Discord, "BucketLoot discovered a secret! | SECRET TYPE: "+rule.Title+" | SECRET URL: "+fileURL+" | SECRET SEVERITY: "+rule.Severity)
+						if err != nil {
+							if strings.Contains(err.Error(), "204") {
+								fmt.Println("Notified successfully!")
+							} else {
+								fmt.Println("Couldn't notify!")
+							}
+							errors = append(errors, fmt.Errorf("Error notifying! %s", err))
+						}
+					}
+					if platforms[1].Slack != "" {
+						err := notifySlack(platforms[1].Slack, "BucketLoot discovered a secret! | SECRET TYPE: "+rule.Title+" | SECRET URL: "+fileURL+" | SECRET SEVERITY: "+rule.Severity)
+						if err != nil {
+							if strings.Contains(err.Error(), "200") {
+								fmt.Println("Notified successfully! [SLACK]")
+							} else {
+								fmt.Println("Couldn't notify! [SLACK]")
+							}
+							errors = append(errors, fmt.Errorf("Error notifying! %s", err))
+						}
+					}
+				}
 			}
 		}
 
@@ -88,6 +114,31 @@ func scanS3FileSlow(fileURLs []string, bucketURL string) error {
 					bucketScanRes.SensitiveFiles = append(bucketScanRes.SensitiveFiles, bucketLootFile)
 					bucketLootFile.Name = ""
 					bucketLootFile.URL = ""
+
+					if *notify {
+						if platforms[0].Discord != "" {
+							err := notifyDiscord(platforms[0].Discord, "BucketLoot discovered a potentially sensitive file! | INFO: "+check.Name+" | FILE URL: "+fileURL)
+							if err != nil {
+								if strings.Contains(err.Error(), "204") {
+									fmt.Println("Notified successfully!")
+								} else {
+									fmt.Println("Couldn't notify!")
+								}
+								errors = append(errors, fmt.Errorf("Error notifying! %s", err))
+							}
+						}
+						if platforms[1].Slack != "" {
+							err := notifySlack(platforms[1].Slack, "BucketLoot discovered a potentially sensitive file! | INFO: "+check.Name+" | FILE URL: "+fileURL)
+							if err != nil {
+								if strings.Contains(err.Error(), "200") {
+									fmt.Println("Notified successfully! [SLACK]")
+								} else {
+									fmt.Println("Couldn't notify! [SLACK]")
+								}
+								errors = append(errors, fmt.Errorf("Error notifying! %s", err))
+							}
+						}
+					}
 				}
 			}
 		}
@@ -216,6 +267,31 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 					mu.Unlock()
 					bucketLootSecret.Name = ""
 					bucketLootSecret.URL = ""
+
+					if *notify {
+						if platforms[0].Discord != "" {
+							err := notifyDiscord(platforms[0].Discord, "BucketLoot discovered a secret! | SECRET TYPE: "+rule.Title+" | SECRET URL: "+url+" | SECRET SEVERITY: "+rule.Severity)
+							if err != nil {
+								if strings.Contains(err.Error(), "204") {
+									fmt.Println("Notified successfully! [DISCORD]")
+								} else {
+									fmt.Println("Couldn't notify! [DISCORD]")
+								}
+								errors = append(errors, fmt.Errorf("Error notifying! %s", err))
+							}
+						}
+						if platforms[1].Slack != "" {
+							err := notifySlack(platforms[1].Slack, "BucketLoot discovered a secret! | SECRET TYPE: "+rule.Title+" | SECRET URL: "+url+" | SECRET SEVERITY: "+rule.Severity)
+							if err != nil {
+								if strings.Contains(err.Error(), "200") {
+									fmt.Println("Notified successfully! [SLACK]")
+								} else {
+									fmt.Println("Couldn't notify! [SLACK]")
+								}
+								errors = append(errors, fmt.Errorf("Error notifying! %s", err))
+							}
+						}
+					}
 				}
 			}
 			//LOOK FOR POTENTIALLY SENSITIVE/VULN FILES
@@ -239,6 +315,31 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 						mu.Unlock()
 						bucketLootFile.Name = ""
 						bucketLootFile.URL = ""
+
+						if *notify {
+							if platforms[0].Discord != "" {
+								err := notifyDiscord(platforms[0].Discord, "BucketLoot discovered a potentially sensitive file! | INFO: "+check.Name+" | FILE URL: "+url)
+								if err != nil {
+									if strings.Contains(err.Error(), "204") {
+										fmt.Println("Notified successfully! [DISCORD]")
+									} else {
+										fmt.Println("Couldn't notify! [DISCORD]")
+									}
+									errors = append(errors, fmt.Errorf("Error notifying! %s", err))
+								}
+							}
+							if platforms[1].Slack != "" {
+								err := notifySlack(platforms[1].Slack, "BucketLoot discovered a potentially sensitive file! | INFO: "+check.Name+" | FILE URL: "+url)
+								if err != nil {
+									if strings.Contains(err.Error(), "200") {
+										fmt.Println("Notified successfully! [SLACK]")
+									} else {
+										fmt.Println("Couldn't notify! [SLACK]")
+									}
+									errors = append(errors, fmt.Errorf("Error notifying! %s", err))
+								}
+							}
+						}
 					}
 				}
 			}
