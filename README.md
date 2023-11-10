@@ -45,8 +45,8 @@ The tool goes beyond just asset discovery and secret exposure scanning by lettin
 <h2> Acknowledgements </h2>
 <ul type="disc">
 <li><a href="https://www.blackhat.com/us-23/arsenal/schedule/#bucketloot---an-automated-s-bucket-inspector-33536">Black Hat USA 2023 [Arsenal]</a></li>
-<li><a href="https://blackhatmea.com/session/bucketloot-automated-s3-bucket-inspector">Black Hat MEA 2023</a></li>
-<li><a href="https://www.blackhat.com/eu-23/arsenal/schedule/index.html#bucketloot---an-automated-s-compatible-bucket-inspector-35800">Black Hat EU 2023</a></li>
+<li><a href="https://blackhatmea.com/session/bucketloot-automated-s3-bucket-inspector">Black Hat MEA 2023 [Arsenal]</a></li>
+<li><a href="https://www.blackhat.com/eu-23/arsenal/schedule/index.html#bucketloot---an-automated-s-compatible-bucket-inspector-35800">Black Hat EU 2023 [Arsenal]</a></li>
 </ul>
 </div>
 
