@@ -66,7 +66,7 @@ func listFilesOtherURLs(bucketURL string, fullScan bool) (otherbucketFiles [][]s
 
 	// Check response status code for errors
 	if resp.StatusCode != http.StatusOK {
-		return nil, nil, fmt.Errorf("Failed to retrieve data from %s. Status code: %d", bucketURL, resp.StatusCode)
+		return nil, nil, fmt.Errorf("failed to retrieve data from %s. Status code: %d", bucketURL, resp.StatusCode)
 	}
 
 	// Read response body
@@ -286,7 +286,7 @@ func listS3BucketFiles(bucketURLs []string) {
 				bucketFileSize := bucketSizes[i]
 				isBlacklisted = 0
 				for _, blacklistExtension := range blacklistExtensions {
-					if strings.Contains(strings.ToLower(bucketFile[1]), blacklistExtension) {
+					if strings.HasSuffix(strings.ToLower(bucketFile[1]), blacklistExtension) {
 						isBlacklisted = 1
 						break
 					}
@@ -335,7 +335,7 @@ func listS3BucketFiles(bucketURLs []string) {
 											othbucketFileSize := otherBucketSizes[i]
 											isBlacklisted = 0
 											for _, blacklistExtension := range blacklistExtensions {
-												if strings.Contains(strings.ToLower(othbucketFile[1]), blacklistExtension) {
+												if strings.HasSuffix(strings.ToLower(othbucketFile[1]), blacklistExtension) {
 													isBlacklisted = 1
 													break
 												}

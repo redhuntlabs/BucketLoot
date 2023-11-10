@@ -19,7 +19,6 @@ var urlValidation = regexp.MustCompile(`^(?:(?:https?|ftp):\/\/)?(?:www\.)?[a-zA
 var urlsRE = regexp.MustCompile(`(http[s]?:\/\/[^\s\/]+)\b`)
 var blacklistExtensions []string
 var isBlacklisted int
-var regexList map[string]string
 var diggedURLs []string
 var urlAssets []string
 var domAssets []string
@@ -48,7 +47,7 @@ var awsBucketNameRe = regexp.MustCompile(`<Name>(.+?)<\/Name>`)
 
 var bucketlootOutput bucketLootOpStruct
 
-//STRUCT FOR STORING SECRET REGEXES
+// STRUCT FOR STORING SECRET REGEXES
 type Rule struct {
 	Regex    string `json:"Regex"`
 	Severity string `json:"Severity"`
@@ -57,7 +56,7 @@ type Rule struct {
 
 var rules []Rule
 
-//BELOW IS THE STRUCTURE FOR PARSING THE VULNFILES JSON FILE
+// BELOW IS THE STRUCTURE FOR PARSING THE VULNFILES JSON FILE
 type vulnFilesStruct struct {
 	Name    string `json:"Name"`
 	Type    string `json:"Type"`
