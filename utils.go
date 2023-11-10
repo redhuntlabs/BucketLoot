@@ -58,7 +58,14 @@ func readFile(fileName string) {
 
 func listFilesOtherURLs(bucketURL string, fullScan bool) (otherbucketFiles [][]string, otherbucketSizes [][]string, err error) {
 	// Make an HTTP GET request to the provided URL
-	resp, err := http.Get(bucketURL)
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			// You can customize redirect handling here if needed.
+			return nil
+		},
+	}
+
+	resp, err := client.Get(bucketURL)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -180,7 +187,14 @@ func listS3BucketFiles(bucketURLs []string) {
 
 			defer wg.Done()
 			// Make HTTP request to S3 bucket URL
-			resp, err := http.Get(bucketURL)
+			client := &http.Client{
+				CheckRedirect: func(req *http.Request, via []*http.Request) error {
+					// You can customize redirect handling here if needed.
+					return nil
+				},
+			}
+
+			resp, err := client.Get(bucketURL)
 			if err != nil {
 				notScannable = append(notScannable, bucketURL)
 				bucketlootOutput.Errors = append(bucketlootOutput.Errors, bucketURL+" encountered an error during the GET request: "+err.Error())

@@ -29,7 +29,14 @@ func scanS3FileSlow(fileURLs []string, bucketURL string) error {
 		)
 
 		// Make HTTP request to S3 bucket URL
-		resp, err := http.Get(fileURL)
+		client := &http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				// You can customize redirect handling here if needed.
+				return nil
+			},
+		}
+
+		resp, err := client.Get(fileURL)
 		if err != nil {
 			errors = append(errors, fmt.Errorf("error making HTTP request to S3 bucket file URL: %v", err))
 			continue
@@ -225,8 +232,14 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 				bucketLootFile    bucketlootSensitiveFileStruct
 				keywordDisc       int
 			)
+			client := &http.Client{
+				CheckRedirect: func(req *http.Request, via []*http.Request) error {
+					// You can customize redirect handling here if needed.
+					return nil
+				},
+			}
 
-			resp, err := http.Get(url)
+			resp, err := client.Get(url)
 			if err != nil {
 				mu.Lock()
 				errors = append(errors, fmt.Errorf("error making HTTP request to S3 bucket file URL: %v", err))
