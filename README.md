@@ -24,7 +24,13 @@ BucketLoot comes with a guest mode by default, which means a user doesn't needs 
 <h2> Features </h2>
 
 <h4> Secret Scanning </h4>
-Scans for over 30+ unique RegEx signatures that can help in uncovering secret exposures from the misconfigured storage bucket. Users have the ability to modify or add their own signatures in the <a href="./regexes.json">regexes.json</a> file. If you believe you have any cool signatures which might be helpful for others too and could be flagged at scale, go ahead and make a PR!
+Scans for over 80+ unique RegEx signatures that can help in uncovering secret exposures tagged with their severity from the misconfigured storage bucket. Users have the ability to modify or add their own signatures in the <a href="./regexes.json">regexes.json</a> file. If you believe you have any cool signatures which might be helpful for others too and could be flagged at scale, go ahead and make a PR!
+
+<h4> Sensitive File Checks</h4>
+Accidental sensitive file leakages are a big problem that affects the security posture of individuals and organisations. BucketLoot comes with a 80+ unique regEx signatures list in <a href="./vulnFiles.json">vulnFiles.json</a> which allows users to flag these sensitive files based on file names or extensions.
+
+<h4> Dig Mode </h4>
+Want to quickly check if any target website is using a misconfigured bucket that is leaking secrets or any other sensitive data? Dig Mode allows you to pass non-S3 targets and let the tool scrape URLs from response body for scanning.
 
 <h4> Asset Extraction </h4>
 Interested in stepping up your asset discovery game? BucketLoot extracts all the URLs/Subdomains and Domains that could be present in an exposed storage bucket, enabling you to have a chance of discovering hidden endpoints, thus giving you an edge over the other traditional recon tools.
@@ -39,6 +45,8 @@ The tool goes beyond just asset discovery and secret exposure scanning by lettin
 <h2> Acknowledgements </h2>
 <ul type="disc">
 <li><a href="https://www.blackhat.com/us-23/arsenal/schedule/#bucketloot---an-automated-s-bucket-inspector-33536">Black Hat USA 2023 [Arsenal]</a></li>
+<li><a href="https://blackhatmea.com/session/bucketloot-automated-s3-bucket-inspector">Black Hat MEA 2023</a></li>
+<li><a href="https://www.blackhat.com/eu-23/arsenal/schedule/index.html#bucketloot---an-automated-s-compatible-bucket-inspector-35800">Black Hat EU 2023</a></li>
 </ul>
 </div>
 
