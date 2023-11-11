@@ -21,6 +21,7 @@ var blacklistExtensions []string
 var isBlacklisted int
 var diggedURLs []string
 var urlAssets []string
+var regexList map[string]string
 var domAssets []string
 var unscannable []string
 var subAssets []string

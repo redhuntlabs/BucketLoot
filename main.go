@@ -126,7 +126,7 @@ func main() {
 				}
 				for _, bucketEntry := range iniFileListData.ScanData {
 					if *slowScan {
-						scanS3FileSlow(bucketEntry.IntFiles, bucketEntry.URL)
+						scanS3FilesSlow(bucketEntry.IntFiles, bucketEntry.URL)
 					} else {
 						scanS3FilesFast(bucketEntry.IntFiles, bucketEntry.URL)
 					}
