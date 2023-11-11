@@ -19,7 +19,6 @@ var urlValidation = regexp.MustCompile(`^(?:(?:https?|ftp):\/\/)?(?:www\.)?[a-zA
 var urlsRE = regexp.MustCompile(`(http[s]?:\/\/[^\s\/]+)\b`)
 var blacklistExtensions []string
 var isBlacklisted int
-var regexList map[string]string
 var diggedURLs []string
 var urlAssets []string
 var domAssets []string
@@ -27,6 +26,7 @@ var unscannable []string
 var subAssets []string
 var slowScan *bool
 var digMode *bool
+var notify *bool
 var errorLogging *bool
 var fullScan *bool
 var scanKeywords []string
@@ -47,7 +47,16 @@ var awsBucketNameRe = regexp.MustCompile(`<Name>(.+?)<\/Name>`)
 
 var bucketlootOutput bucketLootOpStruct
 
-//BELOW IS THE STRUCTURE FOR PARSING THE VULNFILES JSON FILE
+// STRUCT FOR STORING SECRET REGEXES
+type Rule struct {
+	Regex    string `json:"Regex"`
+	Severity string `json:"Severity"`
+	Title    string `json:"Title"`
+}
+
+var rules []Rule
+
+// BELOW IS THE STRUCTURE FOR PARSING THE VULNFILES JSON FILE
 type vulnFilesStruct struct {
 	Name    string `json:"Name"`
 	Type    string `json:"Type"`
@@ -86,8 +95,9 @@ type bucketlootAssetStruct struct {
 }
 
 type bucketlootSecretStruct struct {
-	Name string `json:"name"`
-	URL  string `json:"url"`
+	Name     string `json:"name"`
+	URL      string `json:"url"`
+	Severity string `json:"severity"`
 }
 
 type bucketlootSensitiveFileStruct struct {
@@ -109,8 +119,9 @@ type bucketLootResStruct struct {
 		Subdomain string `json:"subdomain"`
 	} `json:"Assets"`
 	Secrets []struct {
-		Name string `json:"name"`
-		URL  string `json:"url"`
+		Name     string `json:"name"`
+		URL      string `json:"url"`
+		Severity string `json:"severity"`
 	} `json:"Secrets"`
 	SensitiveFiles []struct {
 		Name string `json:"name"`
@@ -131,8 +142,9 @@ type bucketLootOpStruct struct {
 			Subdomain string `json:"subdomain"`
 		} `json:"Assets"`
 		Secrets []struct {
-			Name string `json:"name"`
-			URL  string `json:"url"`
+			Name     string `json:"name"`
+			URL      string `json:"url"`
+			Severity string `json:"severity"`
 		} `json:"Secrets"`
 		SensitiveFiles []struct {
 			Name string `json:"name"`
@@ -156,6 +168,14 @@ type platformCreds []struct {
 	Credentials string `json:"credentials"`
 }
 
+// STRUCT FOR DECODING notificationConfig.json
+type notifyconf struct {
+	Discord string `json:"Discord"`
+	Slack   string `json:"Slack"`
+}
+
+var platforms []notifyconf
+
 func init() {
 
 	bucketlootOutput.Version = "2.0"
@@ -173,13 +193,15 @@ func init() {
 	}
 
 	//READ THE REGEX JSON FILE AND PARSE IT
-	regexJSON, err := ioutil.ReadFile("regexes.json")
+	regFile, err := os.Open("regexes.json")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error opening file: %v", err)
 	}
-	if err := json.Unmarshal((regexJSON), &regexList); err != nil {
-		fmt.Println(err)
-		return
+	defer file.Close()
+
+	decoder := json.NewDecoder(regFile)
+	if err := decoder.Decode(&rules); err != nil {
+		log.Fatalf("Error decoding JSON: %v", err)
 	}
 
 	//READ THE VULNFILES JSON FILE AND PARSE IT

@@ -307,43 +307,43 @@
     {
         "Name": "MySQL client command history file",
         "Type": "filename",
-        "Match": "^\\\\.?mysql_history$",
+        "Match": "\\.?mysql_history$",
         "isRegex": true
     },
     {
         "Name": "PostgreSQL client command history file",
         "Type": "filename",
-        "Match": "^\\\\.?psql_history$",
+        "Match": "\\.?psql_history$",
         "isRegex": true
     },
     {
         "Name": "PostgreSQL password file",
         "Type": "filename",
-        "Match": "^\\\\.?pgpass$",
+        "Match": "\\.?pgpass$",
         "isRegex": true
     },
     {
         "Name": "Ruby IRB console history file",
         "Type": "filename",
-        "Match": "^\\\\.?irb_history$",
+        "Match": "\\.?irb_history$",
         "isRegex": true
     },
     {
         "Name": "DBeaver SQL database manager configuration file",
         "Type": "filename",
-        "Match": "^\\\\.?dbeaver-data-sources\\.xml$",
+        "Match": "\\.?dbeaver-data-sources\\.xml$",
         "isRegex": true
     },
     {
         "Name": "Mutt e-mail client configuration file",
         "Type": "filename",
-        "Match": "^\\\\.?muttrc$",
+        "Match": "\\.?muttrc$",
         "isRegex": true
     },
     {
         "Name": "S3cmd configuration file",
         "Type": "filename",
-        "Match": "^\\\\.?s3cfg$",
+        "Match": "\\.?s3cfg$",
         "isRegex": true
     },
     {
@@ -355,7 +355,7 @@
     {
         "Name": "T command-line Twitter client configuration file",
         "Type": "filename",
-        "Match": "^\\\\.?trc$",
+        "Match": "\\.?trc$",
         "isRegex": true
     },
     {
@@ -385,7 +385,7 @@
     {
         "Name": "Apache htpasswd file",
         "Type": "filename",
-        "Match": "^\\\\.?htpasswd$",
+        "Match": "\\.?htpasswd$",
         "isRegex": true
     },
     {
@@ -397,31 +397,31 @@
     {
         "Name": "Tugboat DigitalOcean management tool configuration",
         "Type": "filename",
-        "Match": "^\\\\.?tugboat$",
+        "Match": "\\.?tugboat$",
         "isRegex": true
     },
     {
         "Name": "git-credential-store helper credentials file",
         "Type": "filename",
-        "Match": "^\\\\.?git-credentials$",
+        "Match": "\\.?git-credentials$",
         "isRegex": true
     },
     {
         "Name": "Git configuration file",
         "Type": "filename",
-        "Match": "^\\\\.?gitconfig$",
+        "Match": "\\.?gitconfig$",
         "isRegex": true
     },
     {
         "Name": "Docker configuration file",
         "Type": "filename",
-        "Match": "^\\\\.?dockercfg$",
+        "Match": "\\.?dockercfg$",
         "isRegex": true
     },
     {
         "Name": "NPM configuration file",
         "Type": "filename",
-        "Match": "^\\\\.?npmrc$",
+        "Match": "\\.?npmrc$",
         "isRegex": true
     },
     {
