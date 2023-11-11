@@ -16,19 +16,25 @@ var bucketFileRE = regexp.MustCompile(`(?m)(?i)<key>(.+?)<\/key>`)
 var bucketSizeRE = regexp.MustCompile(`(?i)<Size>(.+?)<\/Size>`)
 var urlRE = regexp.MustCompile(`https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)`)
 var urlValidation = regexp.MustCompile(`^(?:(?:https?|ftp):\/\/)?(?:www\.)?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+(?:\/[^\s]*)?$`)
+var urlsRE = regexp.MustCompile(`(http[s]?:\/\/[^\s\/]+)\b`)
 var blacklistExtensions []string
 var isBlacklisted int
-var regexList map[string]string
+var diggedURLs []string
 var urlAssets []string
 var domAssets []string
+var unscannable []string
 var subAssets []string
 var slowScan *bool
+var digMode *bool
+var notify *bool
 var errorLogging *bool
 var fullScan *bool
 var scanKeywords []string
 
 var urlsFileList []fileListEntry
 var iniFileListData fileListData
+
+var vulnerableFileChecks []vulnFilesStruct
 
 var maxFileSize string
 var keywordSearch string
@@ -40,6 +46,23 @@ var awsBucketNameRe = regexp.MustCompile(`<Name>(.+?)<\/Name>`)
 //VAR DECLARATION FOR BUCKETLOOT OUTPUT
 
 var bucketlootOutput bucketLootOpStruct
+
+// STRUCT FOR STORING SECRET REGEXES
+type Rule struct {
+	Regex    string `json:"Regex"`
+	Severity string `json:"Severity"`
+	Title    string `json:"Title"`
+}
+
+var rules []Rule
+
+// BELOW IS THE STRUCTURE FOR PARSING THE VULNFILES JSON FILE
+type vulnFilesStruct struct {
+	Name    string `json:"Name"`
+	Type    string `json:"Type"`
+	Match   string `json:"Match"`
+	IsRegex bool   `json:"isRegex"`
+}
 
 //BELOW STRUCT ARE RELATED TO URLS WHOSE FILES ARE EXTRACTED.
 //First struct is for a single entry of ScanData array. It stores all the scannable bucket entries
@@ -72,6 +95,12 @@ type bucketlootAssetStruct struct {
 }
 
 type bucketlootSecretStruct struct {
+	Name     string `json:"name"`
+	URL      string `json:"url"`
+	Severity string `json:"severity"`
+}
+
+type bucketlootSensitiveFileStruct struct {
 	Name string `json:"name"`
 	URL  string `json:"url"`
 }
@@ -90,9 +119,14 @@ type bucketLootResStruct struct {
 		Subdomain string `json:"subdomain"`
 	} `json:"Assets"`
 	Secrets []struct {
+		Name     string `json:"name"`
+		URL      string `json:"url"`
+		Severity string `json:"severity"`
+	} `json:"Secrets"`
+	SensitiveFiles []struct {
 		Name string `json:"name"`
 		URL  string `json:"url"`
-	} `json:"Secrets"`
+	} `json:"SensitiveFiles"`
 	Keywords []struct {
 		URL     string `json:"url"`
 		Keyword string `json:"keyword"`
@@ -108,9 +142,14 @@ type bucketLootOpStruct struct {
 			Subdomain string `json:"subdomain"`
 		} `json:"Assets"`
 		Secrets []struct {
+			Name     string `json:"name"`
+			URL      string `json:"url"`
+			Severity string `json:"severity"`
+		} `json:"Secrets"`
+		SensitiveFiles []struct {
 			Name string `json:"name"`
 			URL  string `json:"url"`
-		} `json:"Secrets"`
+		} `json:"SensitiveFiles"`
 		Keywords []struct {
 			URL     string `json:"url"`
 			Keyword string `json:"keyword"`
@@ -129,10 +168,19 @@ type platformCreds []struct {
 	Credentials string `json:"credentials"`
 }
 
+// STRUCT FOR DECODING notificationConfig.json
+type notifyconf struct {
+	Discord string `json:"Discord"`
+	Slack   string `json:"Slack"`
+}
+
+var platforms []notifyconf
+
 func init() {
 
-	bucketlootOutput.Version = "1.0"
+	bucketlootOutput.Version = "2.0"
 
+	//READ THE BLACKLIST EXTENSIONS FILE
 	file, err := os.Open("blacklist.txt")
 	if err != nil {
 		log.Fatalln("[Error] Looks like the tool is facing some issue while loading the specified file. [", err.Error(), "]")
@@ -144,15 +192,51 @@ func init() {
 		blacklistExtensions = append(blacklistExtensions, scanner.Text())
 	}
 
-	regexJSON, err := ioutil.ReadFile("regexes.json")
+	//READ THE REGEX JSON FILE AND PARSE IT
+	regFile, err := os.Open("regexes.json")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error opening file: %v", err)
 	}
-	if err := json.Unmarshal((regexJSON), &regexList); err != nil {
-		fmt.Println(err)
+	defer file.Close()
+
+	decoder := json.NewDecoder(regFile)
+	if err := decoder.Decode(&rules); err != nil {
+		log.Fatalf("Error decoding JSON: %v", err)
+	}
+
+	//READ THE VULNFILES JSON FILE AND PARSE IT
+	// Read the JSON file into a byte slice
+	data, err := ioutil.ReadFile("vulnFiles.json")
+	if err != nil {
+		fmt.Println("Error reading the JSON file:", err)
 		return
 	}
 
+	// Unmarshal the JSON data into the extensions slice
+	err = json.Unmarshal(data, &vulnerableFileChecks)
+	if err != nil {
+		fmt.Println("Error unmarshaling JSON:", err)
+		return
+	}
+
+}
+
+func uniqueStrings(input []string) []string {
+	// Create a map to store unique strings
+	uniqueMap := make(map[string]bool)
+
+	// Create a result slice to hold unique entries
+	uniqueEntries := []string{}
+
+	for _, str := range input {
+		if !uniqueMap[str] {
+			// If the string is not in the map, add it to the result slice and mark it as seen in the map
+			uniqueEntries = append(uniqueEntries, str)
+			uniqueMap[str] = true
+		}
+	}
+
+	return uniqueEntries
 }
 
 const banner = `

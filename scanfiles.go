@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/fatih/color"
@@ -19,12 +20,23 @@ func scanS3FileSlow(fileURLs []string, bucketURL string) error {
 	bucketScanRes.BucketUrl = bucketURL
 
 	for _, fileURL := range fileURLs {
-		var bucketLootAsset bucketlootAssetStruct
-		var bucketLootSecret bucketlootSecretStruct
-		var bucketLootKeyword bucketlootKeywordStruct
-		var keywordDisc int
+		var (
+			bucketLootAsset   bucketlootAssetStruct
+			bucketLootSecret  bucketlootSecretStruct
+			bucketLootFile    bucketlootSensitiveFileStruct
+			bucketLootKeyword bucketlootKeywordStruct
+			keywordDisc       int
+		)
+
 		// Make HTTP request to S3 bucket URL
-		resp, err := http.Get(fileURL)
+		client := &http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				// You can customize redirect handling here if needed.
+				return nil
+			},
+		}
+
+		resp, err := client.Get(fileURL)
 		if err != nil {
 			errors = append(errors, fmt.Errorf("error making HTTP request to S3 bucket file URL: %v", err))
 			continue
@@ -52,15 +64,89 @@ func scanS3FileSlow(fileURLs []string, bucketURL string) error {
 
 		// Parse HTML to scan S3 Files
 		//Extract Secrets
-		for regName, regValue := range regexList {
-			reg := regexp.MustCompile(regValue)
+		for _, rule := range rules {
+			reg := regexp.MustCompile(rule.Regex)
 			if reg.MatchString(string(body)) {
-				fmt.Printf("Discovered %v in %s\n", color.RedString("SECRET["+regName+"]"), fileURL)
-				bucketLootSecret.Name = regName
+				fmt.Printf("Discovered %v in %s\n", color.RedString("SECRET["+rule.Title+"]"), fileURL)
+				bucketLootSecret.Name = rule.Title
 				bucketLootSecret.URL = fileURL
+				bucketLootSecret.Severity = rule.Severity
 				bucketScanRes.Secrets = append(bucketScanRes.Secrets, bucketLootSecret)
 				bucketLootSecret.Name = ""
 				bucketLootSecret.URL = ""
+
+				if *notify {
+					if platforms[0].Discord != "" {
+						err := notifyDiscord(platforms[0].Discord, "BucketLoot discovered a secret! | SECRET TYPE: "+rule.Title+" | SECRET URL: "+fileURL+" | SECRET SEVERITY: "+rule.Severity+" | BUCKET URL: "+bucketURL)
+						if err != nil {
+							if strings.Contains(err.Error(), "204") {
+								fmt.Println("Notified successfully!")
+							} else {
+								fmt.Println("Couldn't notify!")
+							}
+							errors = append(errors, fmt.Errorf("error notifying! %s", err))
+						}
+					}
+					if platforms[1].Slack != "" {
+						err := notifySlack(platforms[1].Slack, "BucketLoot discovered a secret! | SECRET TYPE: "+rule.Title+" | SECRET URL: "+fileURL+" | SECRET SEVERITY: "+rule.Severity+" | BUCKET URL: "+bucketURL)
+						if err != nil {
+							if strings.Contains(err.Error(), "200") {
+								fmt.Println("Notified successfully! [SLACK]")
+							} else {
+								fmt.Println("Couldn't notify! [SLACK]")
+							}
+							errors = append(errors, fmt.Errorf("error notifying! %s", err))
+						}
+					}
+				}
+			}
+		}
+
+		//LOOK FOR POTENTIALLY SENSITIVE/VULN FILES
+		for _, check := range vulnerableFileChecks {
+			// Compile the regex pattern
+			var re *regexp.Regexp
+			re, err = regexp.Compile(check.Match)
+			if err != nil {
+				errors = append(errors, fmt.Errorf("error compiling vuln files regex %s", err))
+				continue
+			}
+
+			// Check if the pattern matches the fileURL
+			if re != nil {
+				if re.MatchString(fileURL) {
+					fmt.Printf("Discovered %v in %s\n", color.YellowString("POTENTIALLY SENSITIVE FILE["+check.Name+"]"), fileURL)
+					bucketLootFile.Name = check.Name
+					bucketLootFile.URL = fileURL
+					bucketScanRes.SensitiveFiles = append(bucketScanRes.SensitiveFiles, bucketLootFile)
+					bucketLootFile.Name = ""
+					bucketLootFile.URL = ""
+
+					if *notify {
+						if platforms[0].Discord != "" {
+							err := notifyDiscord(platforms[0].Discord, "BucketLoot discovered a potentially sensitive file! | INFO: "+check.Name+" | FILE URL: "+fileURL+" | BUCKET URL: "+bucketURL)
+							if err != nil {
+								if strings.Contains(err.Error(), "204") {
+									fmt.Println("Notified successfully!")
+								} else {
+									fmt.Println("Couldn't notify!")
+								}
+								errors = append(errors, fmt.Errorf("error notifying! %s", err))
+							}
+						}
+						if platforms[1].Slack != "" {
+							err := notifySlack(platforms[1].Slack, "BucketLoot discovered a potentially sensitive file! | INFO: "+check.Name+" | FILE URL: "+fileURL+" | BUCKET URL: "+bucketURL)
+							if err != nil {
+								if strings.Contains(err.Error(), "200") {
+									fmt.Println("Notified successfully! [SLACK]")
+								} else {
+									fmt.Println("Couldn't notify! [SLACK]")
+								}
+								errors = append(errors, fmt.Errorf("error notifying! %s", err))
+							}
+						}
+					}
+				}
 			}
 		}
 
@@ -143,10 +229,17 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 				bucketLootAsset   bucketlootAssetStruct
 				bucketLootSecret  bucketlootSecretStruct
 				bucketLootKeyword bucketlootKeywordStruct
+				bucketLootFile    bucketlootSensitiveFileStruct
 				keywordDisc       int
 			)
+			client := &http.Client{
+				CheckRedirect: func(req *http.Request, via []*http.Request) error {
+					// You can customize redirect handling here if needed.
+					return nil
+				},
+			}
 
-			resp, err := http.Get(url)
+			resp, err := client.Get(url)
 			if err != nil {
 				mu.Lock()
 				errors = append(errors, fmt.Errorf("error making HTTP request to S3 bucket file URL: %v", err))
@@ -175,18 +268,92 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 				mu.Unlock()
 				return
 			}
-
-			for regName, regValue := range regexList {
-				reg := regexp.MustCompile(regValue)
+			for _, rule := range rules {
+				reg := regexp.MustCompile(rule.Regex)
 				if reg.MatchString(string(body)) {
-					fmt.Printf("Discovered %v in %s\n", color.RedString("SECRET["+regName+"]"), url)
-					bucketLootSecret.Name = regName
+					fmt.Printf("Discovered %v in %s\n", color.RedString("SECRET["+rule.Title+"]"), url)
+					bucketLootSecret.Name = rule.Title
 					bucketLootSecret.URL = url
+					bucketLootSecret.Severity = rule.Severity
 					mu.Lock()
 					bucketScanRes.Secrets = append(bucketScanRes.Secrets, bucketLootSecret)
 					mu.Unlock()
 					bucketLootSecret.Name = ""
 					bucketLootSecret.URL = ""
+
+					if *notify {
+						if platforms[0].Discord != "" {
+							err := notifyDiscord(platforms[0].Discord, "BucketLoot discovered a secret! | SECRET TYPE: "+rule.Title+" | SECRET URL: "+url+" | SECRET SEVERITY: "+rule.Severity+" | BUCKET URL: "+bucketURL)
+							if err != nil {
+								if strings.Contains(err.Error(), "204") {
+									fmt.Println("Notified successfully! [DISCORD]")
+								} else {
+									fmt.Println("Couldn't notify! [DISCORD]")
+								}
+								errors = append(errors, fmt.Errorf("error notifying! %s", err))
+							}
+						}
+						if platforms[1].Slack != "" {
+							err := notifySlack(platforms[1].Slack, "BucketLoot discovered a secret! | SECRET TYPE: "+rule.Title+" | SECRET URL: "+url+" | SECRET SEVERITY: "+rule.Severity+" | BUCKET URL: "+bucketURL)
+							if err != nil {
+								if strings.Contains(err.Error(), "200") {
+									fmt.Println("Notified successfully! [SLACK]")
+								} else {
+									fmt.Println("Couldn't notify! [SLACK]")
+								}
+								errors = append(errors, fmt.Errorf("error notifying! %s", err))
+							}
+						}
+					}
+				}
+			}
+			//LOOK FOR POTENTIALLY SENSITIVE/VULN FILES
+			for _, check := range vulnerableFileChecks {
+				// Compile the regex pattern
+				var re *regexp.Regexp
+				re, err = regexp.Compile(check.Match)
+				if err != nil {
+					errors = append(errors, fmt.Errorf("error compiling vuln files regex %s", err))
+					continue
+				}
+
+				// Check if the pattern matches the fileURL
+				if re != nil {
+					if re.MatchString(url) {
+						fmt.Printf("Discovered %v in %s\n", color.YellowString("POTENTIALLY SENSITIVE FILE["+check.Name+"]"), url)
+						bucketLootFile.Name = check.Name
+						bucketLootFile.URL = url
+						mu.Lock()
+						bucketScanRes.SensitiveFiles = append(bucketScanRes.SensitiveFiles, bucketLootFile)
+						mu.Unlock()
+						bucketLootFile.Name = ""
+						bucketLootFile.URL = ""
+
+						if *notify {
+							if platforms[0].Discord != "" {
+								err := notifyDiscord(platforms[0].Discord, "BucketLoot discovered a potentially sensitive file! | INFO: "+check.Name+" | FILE URL: "+url+" | BUCKET URL: "+bucketURL)
+								if err != nil {
+									if strings.Contains(err.Error(), "204") {
+										fmt.Println("Notified successfully! [DISCORD]")
+									} else {
+										fmt.Println("Couldn't notify! [DISCORD]")
+									}
+									errors = append(errors, fmt.Errorf("error notifying! %s", err))
+								}
+							}
+							if platforms[1].Slack != "" {
+								err := notifySlack(platforms[1].Slack, "BucketLoot discovered a potentially sensitive file! | INFO: "+check.Name+" | FILE URL: "+url+" | BUCKET URL: "+bucketURL)
+								if err != nil {
+									if strings.Contains(err.Error(), "200") {
+										fmt.Println("Notified successfully! [SLACK]")
+									} else {
+										fmt.Println("Couldn't notify! [SLACK]")
+									}
+									errors = append(errors, fmt.Errorf("error notifying! %s", err))
+								}
+							}
+						}
+					}
 				}
 			}
 

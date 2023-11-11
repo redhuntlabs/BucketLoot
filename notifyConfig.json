@@ -1,0 +1,8 @@
+[
+    {
+        "Discord": "DISCORD-WEBHOOK-URL-HERE"
+    },
+    {
+        "Slack": "SLACK-WEBHOOK-URL-HERE"
+    }
+]
