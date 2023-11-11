@@ -1,9 +1,12 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -12,8 +15,15 @@ import (
 	tld "github.com/jpillora/go-tld"
 )
 
-func scanS3FileSlow(fileURLs []string, bucketURL string) error {
+var tempDir = ".temp"
+var tempFileSuffix = "temp_s3_file_"
+
+func scanS3FilesSlow(fileURLs []string, bucketURL string) error {
 	var errors []error
+
+	if err := os.MkdirAll(tempDir, 0755); err != nil {
+		return err
+	}
 
 	//BELOW CODE BLOCK IS FOR ARRANGING BUCKETLOOT OUTPUT
 	var bucketScanRes bucketLootResStruct
@@ -28,22 +38,34 @@ func scanS3FileSlow(fileURLs []string, bucketURL string) error {
 			keywordDisc       int
 		)
 
-		// Make HTTP request to S3 bucket URL
-		client := &http.Client{
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				// You can customize redirect handling here if needed.
-				return nil
-			},
+		// Create a temporary file in the custom directory to store the downloaded content
+		tempFile, err := ioutil.TempFile(tempDir, tempFileSuffix)
+		if err != nil {
+			errors = append(errors, fmt.Errorf("error creating temporary file: %v", err))
+			continue
 		}
+		defer tempFile.Close()
 
-		resp, err := client.Get(fileURL)
+		// Make HTTP request to S3 bucket
+		resp, err := http.Get(fileURL)
 		if err != nil {
 			errors = append(errors, fmt.Errorf("error making HTTP request to S3 bucket file URL: %v", err))
 			continue
 		}
 		defer resp.Body.Close()
 
-		// Check response status code for errors
+		_, err = io.Copy(tempFile, resp.Body)
+		if err != nil {
+			errors = append(errors, fmt.Errorf("error copying response body to temporary file: %v", err))
+			continue
+		}
+
+		body, err := ioutil.ReadFile(tempFile.Name())
+		if err != nil {
+			errors = append(errors, fmt.Errorf("error reading content from the temporary file: %v", err))
+			continue
+		}
+
 		if resp.StatusCode != http.StatusOK {
 			if resp.StatusCode == http.StatusNotFound {
 				errors = append(errors, fmt.Errorf("s3 bucket file not found: %s", fileURL))
@@ -52,13 +74,6 @@ func scanS3FileSlow(fileURLs []string, bucketURL string) error {
 			} else {
 				errors = append(errors, fmt.Errorf("unexpected response status code from S3 bucket file URL: %d: %s", resp.StatusCode, fileURL))
 			}
-			continue
-		}
-
-		// Read response body
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			errors = append(errors, fmt.Errorf("error reading response body from S3 bucket file URL: %v: %s", err, fileURL))
 			continue
 		}
 
@@ -198,6 +213,9 @@ func scanS3FileSlow(fileURLs []string, bucketURL string) error {
 			fmt.Printf("Discovered %v in %s\n", color.GreenString("Keyword(s)"), fileURL)
 		}
 	}
+
+	os.RemoveAll(tempDir)
+
 	bucketlootOutput.Results = append(bucketlootOutput.Results, bucketScanRes)
 	if len(errors) > 0 {
 		for _, err := range errors {
@@ -212,8 +230,24 @@ func scanS3FileSlow(fileURLs []string, bucketURL string) error {
 
 func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 	var wg sync.WaitGroup
-	var mu sync.Mutex
+	var mutex sync.Mutex
 	var errors []error
+	var downloadedFiles []string
+
+	var (
+		bucketLootAsset   bucketlootAssetStruct
+		bucketLootSecret  bucketlootSecretStruct
+		bucketLootKeyword bucketlootKeywordStruct
+		bucketLootFile    bucketlootSensitiveFileStruct
+		keywordDisc       int
+	)
+
+	os.RemoveAll(tempDir)
+
+	// Create a temporary directory in the current working directory
+	if err := os.MkdirAll(tempDir, 0755); err != nil {
+		return err
+	}
 
 	bucketScanRes := bucketLootResStruct{
 		BucketUrl: bucketURL,
@@ -225,31 +259,17 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 		go func(url string) {
 			defer wg.Done()
 
-			var (
-				bucketLootAsset   bucketlootAssetStruct
-				bucketLootSecret  bucketlootSecretStruct
-				bucketLootKeyword bucketlootKeywordStruct
-				bucketLootFile    bucketlootSensitiveFileStruct
-				keywordDisc       int
-			)
-			client := &http.Client{
-				CheckRedirect: func(req *http.Request, via []*http.Request) error {
-					// You can customize redirect handling here if needed.
-					return nil
-				},
-			}
-
-			resp, err := client.Get(url)
+			resp, err := http.Get(url)
 			if err != nil {
-				mu.Lock()
+				mutex.Lock()
 				errors = append(errors, fmt.Errorf("error making HTTP request to S3 bucket file URL: %v", err))
-				mu.Unlock()
+				mutex.Unlock()
 				return
 			}
 			defer resp.Body.Close()
 
 			if resp.StatusCode != http.StatusOK {
-				mu.Lock()
+				mutex.Lock()
 				if resp.StatusCode == http.StatusNotFound {
 					errors = append(errors, fmt.Errorf("s3 bucket file not found: %s", url))
 				} else if resp.StatusCode == http.StatusForbidden {
@@ -257,15 +277,56 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 				} else {
 					errors = append(errors, fmt.Errorf("unexpected response status code from S3 bucket file URL: %d: %s", resp.StatusCode, url))
 				}
-				mu.Unlock()
+				mutex.Unlock()
 				return
 			}
 
-			body, err := ioutil.ReadAll(resp.Body)
+			// Create a temporary file in the custom directory to store the downloaded content
+			tempFile, err := ioutil.TempFile(tempDir, tempFileSuffix)
 			if err != nil {
-				mu.Lock()
+				mutex.Lock()
+				errors = append(errors, fmt.Errorf("error creating temporary file: %v", err))
+				mutex.Unlock()
+				return
+			}
+			defer tempFile.Close()
+
+			_, err = io.Copy(tempFile, resp.Body)
+			if err != nil {
+				mutex.Lock()
+				errors = append(errors, fmt.Errorf("error copying response body to temporary file: %v", err))
+				mutex.Unlock()
+				return
+			}
+
+			// writes the source URL of the file to the end of the file
+			tempFile.WriteString("\n" + base64.StdEncoding.EncodeToString([]byte(url)))
+			tempFile.Close()
+
+			mutex.Lock()
+			downloadedFiles = append(downloadedFiles, tempFile.Name())
+			mutex.Unlock()
+
+		}(fileURL)
+	}
+
+	wg.Wait()
+
+	for _, filePath := range downloadedFiles {
+		wg.Add(1)
+
+		go func(filePath string) {
+			defer wg.Done()
+
+			body, err := ioutil.ReadFile(filePath)
+			lines := strings.Split(string(body), "\n")
+			urlByte, err := base64.StdEncoding.DecodeString(lines[len(lines)-1])
+			url := string(urlByte)
+
+			if err != nil {
+				mutex.Lock()
 				errors = append(errors, fmt.Errorf("error reading response body from S3 bucket file URL: %v: %s", err, url))
-				mu.Unlock()
+				mutex.Unlock()
 				return
 			}
 			for _, rule := range rules {
@@ -275,9 +336,9 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 					bucketLootSecret.Name = rule.Title
 					bucketLootSecret.URL = url
 					bucketLootSecret.Severity = rule.Severity
-					mu.Lock()
+					mutex.Lock()
 					bucketScanRes.Secrets = append(bucketScanRes.Secrets, bucketLootSecret)
-					mu.Unlock()
+					mutex.Unlock()
 					bucketLootSecret.Name = ""
 					bucketLootSecret.URL = ""
 
@@ -323,9 +384,9 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 						fmt.Printf("Discovered %v in %s\n", color.YellowString("POTENTIALLY SENSITIVE FILE["+check.Name+"]"), url)
 						bucketLootFile.Name = check.Name
 						bucketLootFile.URL = url
-						mu.Lock()
+						mutex.Lock()
 						bucketScanRes.SensitiveFiles = append(bucketScanRes.SensitiveFiles, bucketLootFile)
-						mu.Unlock()
+						mutex.Unlock()
 						bucketLootFile.Name = ""
 						bucketLootFile.URL = ""
 
@@ -358,9 +419,9 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 			}
 
 			extURLs := urlRE.FindAllString(string(body), -1)
-			mu.Lock()
+			mutex.Lock()
 			urlAssets = append(urlAssets, extURLs...)
-			mu.Unlock()
+			mutex.Unlock()
 			if len(extURLs) > 0 {
 				fmt.Printf("Discovered %v in %s\n", color.BlueString("URL(s)"), url)
 			}
@@ -369,18 +430,18 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 				bucketLootAsset.URL = u
 				asset, err := tld.Parse(u)
 				if err == nil {
-					mu.Lock()
+					mutex.Lock()
 					domAssets = append(domAssets, asset.Domain+"."+asset.TLD)
 					bucketLootAsset.Domain = asset.Domain + "." + asset.TLD
 					if asset.Subdomain != "" {
 						subAssets = append(subAssets, asset.Subdomain+"."+asset.Domain+"."+asset.TLD)
 						bucketLootAsset.Subdomain = asset.Subdomain + "." + asset.Domain + "." + asset.TLD
 					}
-					mu.Unlock()
+					mutex.Unlock()
 				}
-				mu.Lock()
+				mutex.Lock()
 				bucketScanRes.Assets = append(bucketScanRes.Assets, bucketLootAsset)
-				mu.Unlock()
+				mutex.Unlock()
 				bucketLootAsset.URL = ""
 				bucketLootAsset.Domain = ""
 				bucketLootAsset.Subdomain = ""
@@ -392,29 +453,33 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 					bucketLootKeyword.Keyword = keyword
 					bucketLootKeyword.URL = url
 					bucketLootKeyword.Type = "FilePath"
-					mu.Lock()
+					mutex.Lock()
 					bucketScanRes.Keywords = append(bucketScanRes.Keywords, bucketLootKeyword)
 					keywordDisc = 1
-					mu.Unlock()
+					mutex.Unlock()
 				}
 				if keywordRe.MatchString(string(body)) {
 					bucketLootKeyword.Keyword = keyword
 					bucketLootKeyword.URL = url
 					bucketLootKeyword.Type = "FileContent"
-					mu.Lock()
+					mutex.Lock()
 					bucketScanRes.Keywords = append(bucketScanRes.Keywords, bucketLootKeyword)
 					keywordDisc = 1
-					mu.Unlock()
+					mutex.Unlock()
 				}
 			}
 
 			if keywordDisc == 1 {
 				fmt.Printf("Discovered %v in %s\n", color.GreenString("Keyword(s)"), url)
 			}
-		}(fileURL)
+
+		}(filePath)
+
 	}
 
 	wg.Wait()
+
+	os.RemoveAll(tempDir)
 
 	bucketlootOutput.Results = append(bucketlootOutput.Results, bucketScanRes)
 	if len(errors) > 0 {
