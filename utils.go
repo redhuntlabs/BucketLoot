@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/andygrunwald/go-jira"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -496,4 +497,63 @@ func notifySlack(webhookURL, message string) error {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 	return nil
+}
+
+func notifyJira(JiraEmail, JiraAPItoken, JiraURL, JiraProjectKey, JiraIssueType, JiraAssigneeId, Category, Type, FileUrl, Severity, BucketURL string) error {
+
+	if strings.HasSuffix(JiraURL, "/") {
+		JiraURL = strings.TrimRight(JiraURL, "/")
+	}
+
+	jt := jira.BasicAuthTransport{
+		Username: JiraEmail,
+		Password: JiraAPItoken,
+	}
+
+	client, err := jira.NewClient(jt.Client(), JiraURL)
+	if err != nil {
+		return err
+	}
+
+	var IssueSummary string
+	var IssueDescription string
+
+	if Category == "Secret" {
+		IssueSummary = fmt.Sprintf("BucketLoot Discovered a Secret Exposure [Type - %s]", Type)
+		IssueDescription = fmt.Sprintf("A secret exposure was discovered while running a scan on %s. The secret is labelled %s, can located at %s, and has the severity of %s.", BucketURL, Type, FileUrl, Severity)
+	} else if Category == "File" {
+		IssueSummary = fmt.Sprintf("BucketLoot Discovered a Sensitve File [Type - %s]", Type)
+		IssueDescription = fmt.Sprintf("A sensitive file was discovered while running a scan on %s. The file was flagged based on either its extension or the name. The sensitive file is labelled as %s, and can be located at %s.", BucketURL, Type, FileUrl)
+	}
+
+	i := jira.Issue{
+		Fields: &jira.IssueFields{
+			Description: IssueDescription,
+			Type: jira.IssueType{
+				Name: JiraIssueType,
+			},
+			Project: jira.Project{
+				Key: JiraProjectKey,
+			},
+			Summary: IssueSummary,
+		},
+	}
+	issue, _, err := client.Issue.Create(&i)
+	if err != nil {
+		return err
+	}
+
+	//OPTIONAL STUFF
+	if JiraAssigneeId != "" && JiraAssigneeId != "Jira-ASSIGNEE-ID-HERE-OPTIONAL" {
+		//update the assignee on the issue just created
+		_, assignErr := client.Issue.UpdateAssignee(issue.ID, &jira.User{
+			AccountID: JiraAssigneeId,
+		})
+
+		if assignErr != nil {
+			return fmt.Errorf("Partial Success while notifying Jira, There was an error while assigning the ticket!", err)
+		}
+	}
+
+	return fmt.Errorf("Success")
 }

@@ -105,8 +105,8 @@ func scanS3FilesSlow(fileURLs []string, bucketURL string) error {
 								fmt.Println("Notified successfully!")
 							} else {
 								fmt.Println("Couldn't notify!")
+								errors = append(errors, fmt.Errorf("error notifying! %s", err))
 							}
-							errors = append(errors, fmt.Errorf("error notifying! %s", err))
 						}
 					}
 					if platforms[1].Slack != "" {
@@ -116,8 +116,21 @@ func scanS3FilesSlow(fileURLs []string, bucketURL string) error {
 								fmt.Println("Notified successfully! [SLACK]")
 							} else {
 								fmt.Println("Couldn't notify! [SLACK]")
+								errors = append(errors, fmt.Errorf("error notifying! %s", err))
 							}
-							errors = append(errors, fmt.Errorf("error notifying! %s", err))
+						}
+					}
+					if platforms[2].JiraAPItoken != "" && platforms[2].JiraEmail != "" && platforms[2].JiraIssueType != "" && platforms[2].JiraProjectKey != "" && platforms[2].JiraURL != "" {
+						err := notifyJira(platforms[2].JiraEmail, platforms[2].JiraAPItoken, platforms[2].JiraURL, platforms[2].JiraProjectKey, platforms[2].JiraIssueType, platforms[2].JiraAssigneeId, "Secret", rule.Title, fileURL, rule.Severity, bucketURL)
+						if err != nil {
+							if strings.Contains(err.Error(), "Partial Success") {
+								fmt.Println(err)
+								errors = append(errors, fmt.Errorf("error notifying! %s", err))
+							} else if strings.Contains(err.Error(), "Success") {
+								fmt.Println("Notified successfully! [JIRA]")
+							} else {
+								errors = append(errors, fmt.Errorf("error notifying! %s", err))
+							}
 						}
 					}
 				}
@@ -152,8 +165,8 @@ func scanS3FilesSlow(fileURLs []string, bucketURL string) error {
 									fmt.Println("Notified successfully!")
 								} else {
 									fmt.Println("Couldn't notify!")
+									errors = append(errors, fmt.Errorf("error notifying! %s", err))
 								}
-								errors = append(errors, fmt.Errorf("error notifying! %s", err))
 							}
 						}
 						if platforms[1].Slack != "" {
@@ -163,8 +176,21 @@ func scanS3FilesSlow(fileURLs []string, bucketURL string) error {
 									fmt.Println("Notified successfully! [SLACK]")
 								} else {
 									fmt.Println("Couldn't notify! [SLACK]")
+									errors = append(errors, fmt.Errorf("error notifying! %s", err))
 								}
-								errors = append(errors, fmt.Errorf("error notifying! %s", err))
+							}
+						}
+						if platforms[2].JiraAPItoken != "" && platforms[2].JiraEmail != "" && platforms[2].JiraIssueType != "" && platforms[2].JiraProjectKey != "" && platforms[2].JiraURL != "" {
+							err := notifyJira(platforms[2].JiraEmail, platforms[2].JiraAPItoken, platforms[2].JiraURL, platforms[2].JiraProjectKey, platforms[2].JiraIssueType, platforms[2].JiraAssigneeId, "File", check.Name, fileURL, "", bucketURL)
+							if err != nil {
+								if strings.Contains(err.Error(), "Partial Success") {
+									fmt.Println(err)
+									errors = append(errors, fmt.Errorf("error notifying! %s", err))
+								} else if strings.Contains(err.Error(), "Success") {
+									fmt.Println("Notified successfully! [JIRA]")
+								} else {
+									errors = append(errors, fmt.Errorf("error notifying! %s", err))
+								}
 							}
 						}
 					}
@@ -364,8 +390,8 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 									fmt.Println("Notified successfully! [DISCORD]")
 								} else {
 									fmt.Println("Couldn't notify! [DISCORD]")
+									errors = append(errors, fmt.Errorf("error notifying! %s", err))
 								}
-								errors = append(errors, fmt.Errorf("error notifying! %s", err))
 							}
 						}
 						if platforms[1].Slack != "" {
@@ -375,8 +401,21 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 									fmt.Println("Notified successfully! [SLACK]")
 								} else {
 									fmt.Println("Couldn't notify! [SLACK]")
+									errors = append(errors, fmt.Errorf("error notifying! %s", err))
 								}
-								errors = append(errors, fmt.Errorf("error notifying! %s", err))
+							}
+						}
+						if platforms[2].JiraAPItoken != "" && platforms[2].JiraEmail != "" && platforms[2].JiraIssueType != "" && platforms[2].JiraProjectKey != "" && platforms[2].JiraURL != "" {
+							err := notifyJira(platforms[2].JiraEmail, platforms[2].JiraAPItoken, platforms[2].JiraURL, platforms[2].JiraProjectKey, platforms[2].JiraIssueType, platforms[2].JiraAssigneeId, "Secret", rule.Title, url, rule.Severity, bucketURL)
+							if err != nil {
+								if strings.Contains(err.Error(), "Partial Success") {
+									fmt.Println(err)
+									errors = append(errors, fmt.Errorf("error notifying! %s", err))
+								} else if strings.Contains(err.Error(), "Success") {
+									fmt.Println("Notified successfully! [JIRA]")
+								} else {
+									errors = append(errors, fmt.Errorf("error notifying! %s", err))
+								}
 							}
 						}
 					}
@@ -412,8 +451,8 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 										fmt.Println("Notified successfully! [DISCORD]")
 									} else {
 										fmt.Println("Couldn't notify! [DISCORD]")
+										errors = append(errors, fmt.Errorf("error notifying! %s", err))
 									}
-									errors = append(errors, fmt.Errorf("error notifying! %s", err))
 								}
 							}
 							if platforms[1].Slack != "" {
@@ -423,8 +462,21 @@ func scanS3FilesFast(fileURLs []string, bucketURL string) error {
 										fmt.Println("Notified successfully! [SLACK]")
 									} else {
 										fmt.Println("Couldn't notify! [SLACK]")
+										errors = append(errors, fmt.Errorf("error notifying! %s", err))
 									}
-									errors = append(errors, fmt.Errorf("error notifying! %s", err))
+								}
+							}
+							if platforms[2].JiraAPItoken != "" && platforms[2].JiraEmail != "" && platforms[2].JiraIssueType != "" && platforms[2].JiraProjectKey != "" && platforms[2].JiraURL != "" {
+								err := notifyJira(platforms[2].JiraEmail, platforms[2].JiraAPItoken, platforms[2].JiraURL, platforms[2].JiraProjectKey, platforms[2].JiraIssueType, platforms[2].JiraAssigneeId, "File", check.Name, url, "", bucketURL)
+								if err != nil {
+									if strings.Contains(err.Error(), "Partial Success") {
+										fmt.Println(err)
+										errors = append(errors, fmt.Errorf("error notifying! %s", err))
+									} else if strings.Contains(err.Error(), "Success") {
+										fmt.Println("Notified successfully! [JIRA]")
+									} else {
+										errors = append(errors, fmt.Errorf("error notifying! %s", err))
+									}
 								}
 							}
 						}

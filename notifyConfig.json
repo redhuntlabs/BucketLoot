@@ -4,5 +4,13 @@
     },
     {
         "Slack": "SLACK-WEBHOOK-URL-HERE"
+    },
+    {
+        "JiraEmail": "EMAIL-ADDRESS-HERE",
+        "JiraAPItoken": "API-TOKEN-HERE",
+        "JiraURL": "JIRA-URL-HERE",
+        "JiraProjectKey": "JIRA-PROJECT-KEY-HERE",
+        "JiraIssueType": "JIRA-ISSUE-TYPE-EG-Task-Bug",
+        "JiraAssigneeId": "Jira-ASSIGNEE-ID-HERE-OPTIONAL"
     }
 ]

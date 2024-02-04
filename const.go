@@ -171,8 +171,14 @@ type platformCreds []struct {
 
 // STRUCT FOR DECODING notificationConfig.json
 type notifyconf struct {
-	Discord string `json:"Discord"`
-	Slack   string `json:"Slack"`
+	Discord        string `json:"Discord"`
+	Slack          string `json:"Slack"`
+	JiraEmail      string `json:"JiraEmail"`
+	JiraAPItoken   string `json:"JiraAPItoken"`
+	JiraURL        string `json:"JiraURL"`
+	JiraProjectKey string `json:"JiraProjectKey"`
+	JiraIssueType  string `json:"JiraIssueType"`
+	JiraAssigneeId string `json:"JiraAssigneeId"`
 }
 
 var platforms []notifyconf
