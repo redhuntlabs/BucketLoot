@@ -518,12 +518,19 @@ func notifyJira(JiraEmail, JiraAPItoken, JiraURL, JiraProjectKey, JiraIssueType,
 	var IssueSummary string
 	var IssueDescription string
 
+	var table string
+
+	table = fmt.Sprintf(`
+	| Bucket URL 		   | Title 	           	  | File URL	         | Severity 	        |
+	| %s                   | %s                   | %s                   | %s                   |
+	`, BucketURL, Type, FileUrl, Severity)
+
 	if Category == "Secret" {
-		IssueSummary = fmt.Sprintf("BucketLoot Discovered a Secret Exposure [Type - %s]", Type)
-		IssueDescription = fmt.Sprintf("A secret exposure was discovered while running a scan on %s. The secret is labelled %s, can located at %s, and has the severity of %s.", BucketURL, Type, FileUrl, Severity)
+		IssueSummary = fmt.Sprintf("BucketLoot Discovered a Secret Exposure [Type - %s] in %s", Type, FileUrl)
+		IssueDescription = fmt.Sprintf("A secret exposure was discovered while running a scan on %s. The secret is labelled %s, can located at %s, and has the severity of %s. \n\n %s", BucketURL, Type, FileUrl, Severity, table)
 	} else if Category == "File" {
-		IssueSummary = fmt.Sprintf("BucketLoot Discovered a Sensitve File [Type - %s]", Type)
-		IssueDescription = fmt.Sprintf("A sensitive file was discovered while running a scan on %s. The file was flagged based on either its extension or the name. The sensitive file is labelled as %s, and can be located at %s.", BucketURL, Type, FileUrl)
+		IssueSummary = fmt.Sprintf("BucketLoot Discovered a Sensitve File [Type - %s] in %s", Type, FileUrl)
+		IssueDescription = fmt.Sprintf("A sensitive file was discovered while running a scan on %s. The file was flagged based on either its extension or the name. The sensitive file is labelled as %s, and can be located at %s. \n\n %s", BucketURL, Type, FileUrl, table)
 	}
 
 	i := jira.Issue{
