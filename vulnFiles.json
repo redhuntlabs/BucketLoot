@@ -519,5 +519,35 @@
         "Type": "filename",
         "Match": "bitcoin\\.conf",
         "isRegex": false
+    },
+    {
+        "Name": "Potential Generic Backup File",
+        "Type": "filename",
+        "Match": "backup",
+        "isRegex": false
+    },
+    {
+        "Name": "Potential Generic Log File",
+        "Type": "extension",
+        "Match": "log",
+        "isRegex": false
+    },
+    {
+        "Name": "Potential Linux Shadow File",
+        "Type": "extension",
+        "Match": "shadow",
+        "isRegex": false
+    },
+    {
+        "Name": "Potential Django Configuration File",
+        "Type": "filename",
+        "Match": "settings\\.py",
+        "isRegex": false
+    },
+    {
+        "Name": "Potential Ruby on Rails Database Schema File",
+        "Type": "filename",
+        "Match": "schema\\.rb",
+        "isRegex": false
     }
 ]
