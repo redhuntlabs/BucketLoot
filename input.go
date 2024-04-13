@@ -15,6 +15,7 @@ func takeInput() {
 	notify = flag.Bool("notify", false, "Notify using webhooks whenever the tool finds any security exposure")
 	flag.StringVar(&keywordSearch, "search", "", "Keyword(s) to look for during the scan. [Possible values -> keyword, keyword1:::keyword2, keywords.txt]")
 	flag.StringVar(&maxFileSize, "max-size", "", "Maximum file size (in bytes)")
+	flag.StringVar(&ghwfstring, "grayhatwarfare", "", "Use Grayhatwarfare to query for buckets with supplied keyword(s) [Possible values -> keyword, keyword1:::keyword2].")
 	errorLogging = flag.Bool("log-errors", false, "Log errors in final output")
 	flag.StringVar(&saveOutput, "save", "", "Save tool output, should either end with .txt or .json [Default output file name is output.json]")
 	flag.Parse()
@@ -54,6 +55,15 @@ func takeInput() {
 			} else {
 				scanKeywords = append(scanKeywords, keywordSearch)
 			}
+		}
+	}
+
+	if ghwfstring != "" {
+		if strings.Contains(ghwfstring, ":::") {
+			ghwfstrings := strings.Split(ghwfstring, ":::")
+			grayhatwfKeywords = ghwfstrings
+		} else {
+			grayhatwfKeywords = append(grayhatwfKeywords, ghwfstring)
 		}
 	}
 

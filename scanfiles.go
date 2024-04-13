@@ -28,7 +28,6 @@ func scanS3FilesSlow(fileURLs []string, bucketURL string) error {
 	//BELOW CODE BLOCK IS FOR ARRANGING BUCKETLOOT OUTPUT
 	var bucketScanRes bucketLootResStruct
 	bucketScanRes.BucketUrl = bucketURL
-
 	for _, fileURL := range fileURLs {
 		var (
 			bucketLootAsset   bucketlootAssetStruct

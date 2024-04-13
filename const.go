@@ -30,6 +30,8 @@ var digMode *bool
 var notify *bool
 var errorLogging *bool
 var fullScan *bool
+var ghwfstring string
+var grayhatwfKeywords []string
 var scanKeywords []string
 
 var urlsFileList []fileListEntry
@@ -42,6 +44,7 @@ var keywordSearch string
 var saveOutput string
 
 var awsCreds string
+var ghwCreds string
 var awsBucketNameRe = regexp.MustCompile(`<Name>(.+?)<\/Name>`)
 
 //VAR DECLARATION FOR BUCKETLOOT OUTPUT
@@ -181,6 +184,13 @@ type notifyconf struct {
 	JiraAssigneeId string `json:"JiraAssigneeId"`
 }
 
+// STRUCT FOR DECODING GHWARFARE STRUCT
+type grayhatwfstruct struct {
+	Buckets []struct {
+		Bucket string `json:"bucket"`
+	} `json:"buckets"`
+}
+
 var platforms []notifyconf
 
 func init() {
@@ -224,6 +234,24 @@ func init() {
 	if err != nil {
 		fmt.Println("Error unmarshaling JSON:", err)
 		return
+	}
+
+	credfile, err := ioutil.ReadFile("credentials.json")
+	if err != nil {
+		log.Fatalln("Error reading credentials.json file, Exiting! \n", err)
+		return
+	}
+	var pfdata platformCreds
+	err = json.Unmarshal(credfile, &pfdata)
+	if err != nil {
+		fmt.Println("Error decoding JSON:", err)
+		return
+	}
+
+	for _, entry := range pfdata {
+		if entry.Platform == "GrayhatWarfare" {
+			ghwCreds = entry.Credentials
+		}
 	}
 
 }

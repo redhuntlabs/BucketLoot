@@ -31,6 +31,17 @@ func main() {
 				*notify = true
 			} else if arg == "log-errors" || arg == "-log-errors" || arg == "--log-errors" {
 				*errorLogging = true
+			} else if arg == "grayhatwarfare" || arg == "-grayhatwarfare" || arg == "--grayhatwarfare" {
+				if !strings.HasPrefix(args[i+1], "-") {
+					if strings.Contains(args[i+1], ":::") {
+						ghkeywords := strings.Split(args[i+1], ":::")
+						grayhatwfKeywords = ghkeywords
+					} else {
+						grayhatwfKeywords = append(grayhatwfKeywords, args[i+1])
+					}
+				} else {
+					log.Println("Skipping Grayhatwarfare lookup! [No arguments provided with the flag.]")
+				}
 			} else if arg == "full" || arg == "--full" || arg == "-full" {
 				readCredsFile()
 			} else if arg == "max-size" || arg == "-max-size" || arg == "--max-size" {
@@ -105,6 +116,14 @@ func main() {
 				fmt.Println("Looks like these is some issue with your notifyconfig file:", notifyErr)
 				toJSON()
 				os.Exit(1)
+			}
+		}
+		ghURLs, err := processGrayhat()
+		if err != nil {
+			log.Println("Error processing Grayhatwarfare module!", err)
+		} else {
+			if len(ghURLs) > 0 {
+				allURLs = append(allURLs, ghURLs...)
 			}
 		}
 		allURLs = formatURL(allURLs)
