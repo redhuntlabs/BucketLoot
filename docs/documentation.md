@@ -202,7 +202,7 @@ Here's an example output for a basic scan to give you a glimpse of how the tool 
  |  '-[___]-'  |  |____/ \__,_|\___|_|\_\___|\__|______\___/ \___/ \__|
  |             |                                                       
  |             |  An Automated S3 Bucket Inspector                                             
- |             |  Developed by Umair Nehri (@umair9747) and Owais Shaikh (@4f77616973)             
+ |             |  Developed by Umair Nehri (@umair9747) and Kunal Aggarwal (@KunalAggarwal)             
  ''-.,_____,.-''                                                        
  
 
