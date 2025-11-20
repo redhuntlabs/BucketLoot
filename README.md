@@ -1,7 +1,7 @@
 <h1 align="center">BucketLoot</h1>
 <p align="center"><b>An Automated S3-compatible Bucket Inspector</b></p>
 <p align="center">
-<a href="#description">Description</a> • <a href="#features">Features</a> • <a href="docs/documentation.md">Documentation</a> • <a href="#acknowledgements">Acknowledgements</a><br><br>
+<a href="#description">Description</a> • <a href="#installation">Installation</a> • <a href="#features">Features</a> • <a href="docs/documentation.md">Documentation</a> • <a href="#acknowledgements">Acknowledgements</a><br><br>
 <img alt="Static Badge" src="https://img.shields.io/badge/Supports-AWS-yellow?logo=amazon">
 <img alt="Static Badge" src="https://img.shields.io/badge/Supports-GCP-red?logo=googlecloud">
 <img alt="Static Badge" src="https://img.shields.io/badge/Supports-DigitalOcean-blue?logo=digitalocean">
@@ -18,6 +18,52 @@ BucketLoot is an automated S3-compatible Bucket inspector that can help users ex
 The tool can scan for buckets deployed on Amazon Web Services (AWS), Google Cloud Storage (GCS), DigitalOcean Spaces and even custom domains/URLs which could be connected to these platforms. It returns the output in a JSON format, thus enabling users to parse it according to their liking or forward it to any other tool for further processing.
 <br><br>
 BucketLoot comes with a guest mode by default, which means a user doesn't needs to specify any API tokens / Access Keys initially in order to run the scan. The tool will scrape a maximum of 1000 files that are returned in the XML response and if the storage bucket contains more than 1000 entries which the user would like to run the scanner on, they can provide platform credentials to run a complete scan. If you'd like to know more about the tool, make sure to check out our <a href="https://redhuntlabs.com/blog/introducing-bucketloot-an-automated-cloud-bucket-inspector/">blog</a>.
+</div>
+<hr style="height: 1px;">
+<div id="installation">
+<h2> Installation </h2>
+
+You can install BucketLoot using either of these methods:
+
+<h3>Install Directly</h3>
+
+```bash
+go install github.com/umair9747/bucketloot/cmd/bucketloot@latest
+```
+
+<h3>Install from Source</h3>
+
+```bash
+# Clone the repository
+git clone https://github.com/redhuntlabs/BucketLoot.git
+cd BucketLoot
+
+# Install the tool
+go install ./cmd/bucketloot
+```
+
+After installation, you can run `bucketloot` from anywhere in your terminal!
+
+<h3>Usage</h3>
+
+```bash
+# Basic usage
+bucketloot https://example-bucket.s3.amazonaws.com
+
+# With options
+bucketloot -slow -notify https://example-bucket.s3.amazonaws.com
+
+# Search for keywords
+bucketloot -search "password" https://example-bucket.s3.amazonaws.com
+
+# Save output
+bucketloot -save results.json https://example-bucket.s3.amazonaws.com
+
+# Full scan mode (requires credentials.json)
+bucketloot -full https://example-bucket.s3.amazonaws.com
+```
+
+For notifications and full scan mode, you'll need to create `notifyConfig.json` and `credentials.json` in your working directory. See the <a href="docs/documentation.md">documentation</a> for more details.
 </div>
 <hr style="height: 1px;">
 <div id="features">
