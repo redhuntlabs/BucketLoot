@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/umair9747/bucketloot/internal/config"
+	"github.com/redhuntlabs/bucketloot/internal/config"
 )
 
 // FormatURL adds http:// prefix and trailing slash to URLs
@@ -108,4 +108,3 @@ func NotifySlack(webhookURL, message string) error {
 	}
 	return nil
 }
-

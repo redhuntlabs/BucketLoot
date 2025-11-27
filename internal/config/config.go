@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/umair9747/bucketloot/internal/types"
+	"github.com/redhuntlabs/bucketloot/internal/types"
 )
 
 //go:embed data/blacklist.txt

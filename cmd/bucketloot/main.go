@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/umair9747/bucketloot/internal/config"
-	"github.com/umair9747/bucketloot/internal/scanner"
-	"github.com/umair9747/bucketloot/internal/utils"
+	"github.com/redhuntlabs/bucketloot/internal/config"
+	"github.com/redhuntlabs/bucketloot/internal/scanner"
+	"github.com/redhuntlabs/bucketloot/internal/utils"
 )
 
 func main() {

@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/umair9747/bucketloot/internal/config"
+	"github.com/redhuntlabs/bucketloot/internal/config"
 )
 
 // TakeInput processes command-line arguments and flags
@@ -64,4 +64,3 @@ func TakeInput() {
 		config.ReadCredsFile()
 	}
 }
-

@@ -19,9 +19,9 @@ import (
 	"github.com/fatih/color"
 	tld "github.com/jpillora/go-tld"
 
-	"github.com/umair9747/bucketloot/internal/config"
-	"github.com/umair9747/bucketloot/internal/types"
-	"github.com/umair9747/bucketloot/internal/utils"
+	"github.com/redhuntlabs/bucketloot/internal/config"
+	"github.com/redhuntlabs/bucketloot/internal/types"
+	"github.com/redhuntlabs/bucketloot/internal/utils"
 )
 
 var tempDir = ".temp"
@@ -381,7 +381,7 @@ func ScanS3FilesFast(fileURLs []string, bucketURL string) error {
 					}
 				}
 			}
-			
+
 			// Look for potentially sensitive/vuln files
 			for _, check := range config.VulnerableFileChecks {
 				re, err := regexp.Compile(check.Match)
@@ -829,4 +829,3 @@ func ListS3BucketFiles(bucketURLs []string) {
 	config.IniFileListData.TotalFiles = totalFiles
 	config.IniFileListData.TotalIntFiles = totalIntFiles
 }
-

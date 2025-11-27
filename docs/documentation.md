@@ -12,7 +12,7 @@ The tool is written in Go, so make sure to <a href="https://go.dev/dl/">install<
 If the package is published, you can install directly:
 
 ```bash
-go install github.com/umair9747/bucketloot/cmd/bucketloot@latest
+go install github.com/redhuntlabs/bucketloot/cmd/bucketloot@latest
 ```
 
 <h4>Installation Method 2: Install from Source</h4>

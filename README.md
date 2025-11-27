@@ -28,7 +28,7 @@ You can install BucketLoot using either of these methods:
 <h3>Install Directly</h3>
 
 ```bash
-go install github.com/umair9747/bucketloot/cmd/bucketloot@latest
+go install github.com/redhuntlabs/bucketloot/cmd/bucketloot@latest
 ```
 
 <h3>Install from Source</h3>
