@@ -1,4 +1,4 @@
-module bucketloot
+module github.com/redhuntlabs/bucketloot
 
 go 1.17
 
